@@ -1,0 +1,132 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongIngress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: route1-name
+route:
+  methods:
+  - GET
+  - POST
+  preserve_host: false
+  protocols:
+  - http
+  - https
+  strip_path: true
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongIngress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: route2-name
+route:
+  methods:
+  - GET
+  - POST
+  preserve_host: false
+  protocols:
+  - http
+  - https
+  regex_priority: 0
+  response_buffering: true
+  strip_path: true
+---
+apiVersion: configuration.konghq.com/v1
+config:
+  add: config-value
+kind: KongPlugin
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: response-transformer-instance
+plugin: response-transformer
+---
+apiVersion: configuration.konghq.com/v1
+config:
+  add: config-value
+kind: KongPlugin
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: request-transformer-instance
+plugin: request-transformer
+---
+apiVersion: configuration.konghq.com/v1
+config:
+  api_spec: openapi...
+kind: KongPlugin
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: oas-validation-instance
+plugin: oas-validation
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    konghq.com/override: route1-name
+    konghq.com/plugins: response-transformer-instance
+  creationTimestamp: null
+  name: route1-name
+spec:
+  rules:
+  - host: host1.kong.lan
+    http:
+      paths:
+      - backend:
+          service:
+            name: my-service
+            port:
+              number: 8888
+        path: /my-first-path
+        pathType: null
+status:
+  loadBalancer: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    konghq.com/override: route2-name
+    konghq.com/plugins: request-transformer-instance
+  creationTimestamp: null
+  name: route2-name
+spec:
+  rules:
+  - host: host1.kong.lan
+    http:
+      paths:
+      - backend:
+          service:
+            name: my-service
+            port:
+              number: 8888
+        path: /my-second-path
+        pathType: null
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    konghq.com/plugins: oas-validation-instance
+  creationTimestamp: null
+  name: my-service
+spec:
+  ports:
+  - port: 8888
+    protocol: TCP
+    targetPort: 8888
+  selector:
+    app: my-service
+status:
+  loadBalancer: {}
+---

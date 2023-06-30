@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: my-service1
+spec:
+  ports:
+  - port: 1025
+    protocol: TCP
+    targetPort: 1025
+  selector:
+    app: my-service1
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: my-service2
+spec:
+  ports:
+  - port: 1125
+    protocol: UDP
+    targetPort: 1125
+  selector:
+    app: my-service2
+status:
+  loadBalancer: {}
+---

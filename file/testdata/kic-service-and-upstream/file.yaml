@@ -1,0 +1,36 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongIngress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: my-service1.kong.lan
+proxy:
+  connect_timeout: 1000
+  protocol: TCP
+  read_timeout: 1000
+  retries: 5
+  write_timeout: 1000
+upstream:
+  algorithm: consistent-hashing
+  hash_fallback: ip
+  hash_on: header
+  hash_on_header: x-lb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    konghq.com/override: my-service1.kong.lan
+  creationTimestamp: null
+  name: my-service1
+spec:
+  ports:
+  - port: 1025
+    protocol: TCP
+    targetPort: 1025
+  selector:
+    app: my-service1
+status:
+  loadBalancer: {}
+---

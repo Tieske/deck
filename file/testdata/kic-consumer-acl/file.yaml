@@ -1,0 +1,35 @@
+apiVersion: configuration.konghq.com/v1
+config:
+  allow:
+  - admin-group
+  - retail-group
+  - banking-group
+kind: KongPlugin
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: acl-instance
+plugin: acl
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: ACLGroup-
+stringData:
+  group: admin-group
+  kongCredType: acl
+---
+apiVersion: configuration.konghq.com/v1
+credentials:
+- ACLGroup-
+custom_id: my-custom-id
+kind: KongConsumer
+metadata:
+  annotations:
+    konghq.com/plugins: acl-instance
+  creationTimestamp: null
+  name: my-consumer
+username: my-consumer
+---

@@ -450,8 +450,11 @@ func TestWriteKongStateToKICStdoutStateWithOneConsumerKeyAuth(t *testing.T) {
 			WithID: true,
 		})
 	})
-	expected := fmt.Sprintf("{[\n  {\n    \"kind\": \"KongPlugin\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"key-auth-instance\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"config\": {\n      \"key_names\": [\n        \"apikey\"\n      ]\n    },\n    \"plugin\": \"key-auth\"\n  }\n][\n  {\n    \"kind\": \"Secret\",\n    \"apiVersion\": \"v1\",\n    \"metadata\": {\n      \"name\": \"KeyAuth-\",\n      \"creationTimestamp\": null\n    },\n    \"stringData\": {\n      \"key\": \"key-auth-key\",\n      \"kongCredType\": \"key-auth\"\n    }\n  }\n][\n  {\n    \"kind\": \"KongConsumer\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"my-consumer\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"konghq.com/plugins\": \"key-auth-instance\"\n      }\n    },\n    \"username\": \"my-consumer\",\n    \"custom_id\": \"my-custom-id\",\n    \"credentials\": [\n      \"KeyAuth-\"\n    ]\n  }\n]}")
-	assert.Equal(expected, output)
+	expected, err := os.ReadFile("testdata/kic-consumer-keyauth/file.yaml")
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+	assert.Equal(string(expected), output)
 }
 
 /*
@@ -501,8 +504,12 @@ func TestWriteKongStateToKICStdoutStateWithOneConsumerHMACAuth(t *testing.T) {
 			WithID: true,
 		})
 	})
-	expected := fmt.Sprintf("{[\n  {\n    \"kind\": \"KongPlugin\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"hmac-auth-instance\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"config\": {\n      \"hide_credentials\": \"false\"\n    },\n    \"plugin\": \"hmac-auth\"\n  }\n][\n  {\n    \"kind\": \"Secret\",\n    \"apiVersion\": \"v1\",\n    \"metadata\": {\n      \"name\": \"HMACAuth-\",\n      \"creationTimestamp\": null\n    },\n    \"stringData\": {\n      \"kongCredType\": \"hmac-auth\",\n      \"secret\": \"hmac-secret\",\n      \"username\": \"hmac-username\"\n    }\n  }\n][\n  {\n    \"kind\": \"KongConsumer\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"my-consumer\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"konghq.com/plugins\": \"hmac-auth-instance\"\n      }\n    },\n    \"username\": \"my-consumer\",\n    \"custom_id\": \"my-custom-id\",\n    \"credentials\": [\n      \"HMACAuth-\"\n    ]\n  }\n]}")
-	assert.Equal(expected, output)
+
+	expected, err := os.ReadFile("testdata/kic-consumer-hmac/file.yaml")
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+	assert.Equal(string(expected), output)
 }
 
 /*
@@ -553,8 +560,12 @@ func TestWriteKongStateToKICStdoutStateWithOneConsumerJWTAuth(t *testing.T) {
 			WithID: true,
 		})
 	})
-	expected := fmt.Sprintf("{[\n  {\n    \"kind\": \"KongPlugin\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"jwt-instance\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"config\": {\n      \"uri_param_names\": [\n        \"paramName_2.2.x\"\n      ]\n    },\n    \"plugin\": \"jwt\"\n  }\n][\n  {\n    \"kind\": \"Secret\",\n    \"apiVersion\": \"v1\",\n    \"metadata\": {\n      \"name\": \"JWTAuth-\",\n      \"creationTimestamp\": null\n    },\n    \"stringData\": {\n      \"algorithm\": \"HS256\",\n      \"key\": \"YJdmaDvVTJxtcWRCvkMikc8oELgAVNcz\",\n      \"kongCredType\": \"jwt\",\n      \"secret\": \"C50k0bcahDhLNhLKSUBSR1OMiFGzNZ7X\"\n    }\n  }\n][\n  {\n    \"kind\": \"KongConsumer\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"my-consumer\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"konghq.com/plugins\": \"jwt-instance\"\n      }\n    },\n    \"username\": \"my-consumer\",\n    \"custom_id\": \"my-custom-id\",\n    \"credentials\": [\n      \"JWTAuth-\"\n    ]\n  }\n]}")
-	assert.Equal(expected, output)
+
+	expected, err := os.ReadFile("testdata/kic-consumer-jwt/file.yaml")
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+	assert.Equal(string(expected), output)
 }
 
 /*
@@ -604,8 +615,12 @@ func TestWriteKongStateToKICStdoutStateWithOneConsumerBasicAuth(t *testing.T) {
 			WithID: true,
 		})
 	})
-	expected := fmt.Sprintf("{[\n  {\n    \"kind\": \"KongPlugin\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"basic-auth-instance\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"config\": {\n      \"hide_credentials\": \"true\"\n    },\n    \"plugin\": \"basic-auth\"\n  }\n][\n  {\n    \"kind\": \"Secret\",\n    \"apiVersion\": \"v1\",\n    \"metadata\": {\n      \"name\": \"BasicAuth-\",\n      \"creationTimestamp\": null\n    },\n    \"stringData\": {\n      \"kongCredType\": \"basic-auth\",\n      \"password\": \"basic-auth-password\",\n      \"username\": \"basic-auth-username\"\n    }\n  }\n][\n  {\n    \"kind\": \"KongConsumer\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"my-consumer\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"konghq.com/plugins\": \"basic-auth-instance\"\n      }\n    },\n    \"username\": \"my-consumer\",\n    \"custom_id\": \"my-custom-id\",\n    \"credentials\": [\n      \"BasicAuth-\"\n    ]\n  }\n]}")
-	assert.Equal(expected, output)
+
+	expected, err := os.ReadFile("testdata/kic-consumer-basicauth/file.yaml")
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+	assert.Equal(string(expected), output)
 }
 
 /*
@@ -660,8 +675,12 @@ func TestWriteKongStateToKICStdoutStateWithOneConsumerOauth2Credential(t *testin
 			WithID: true,
 		})
 	})
-	expected := fmt.Sprintf("{[\n  {\n    \"kind\": \"KongPlugin\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"oauth2-instance\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"config\": {\n      \"enable_authorization_code\": \"true\",\n      \"mandatory_scope\": \"true\",\n      \"scopes\": [\n        \"email\",\n        \"phone\",\n        \"address\"\n      ],\n      \"token_expiration\": 7200\n    },\n    \"plugin\": \"oauth2\"\n  }\n][\n  {\n    \"kind\": \"Secret\",\n    \"apiVersion\": \"v1\",\n    \"metadata\": {\n      \"name\": \"OAuth2Cred-\",\n      \"creationTimestamp\": null\n    },\n    \"stringData\": {\n      \"client_id\": \"oauth-client-id\",\n      \"client_secret\": \"oauth-client-secret\",\n      \"client_type\": \"confidential\",\n      \"hash_secret\": \"false\",\n      \"kongCredType\": \"oauth2\"\n    }\n  }\n][\n  {\n    \"kind\": \"KongConsumer\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"my-consumer\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"konghq.com/plugins\": \"oauth2-instance\"\n      }\n    },\n    \"username\": \"my-consumer\",\n    \"custom_id\": \"my-custom-id\",\n    \"credentials\": [\n      \"OAuth2Cred-\"\n    ]\n  }\n]}")
-	assert.Equal(expected, output)
+
+	expected, err := os.ReadFile("testdata/kic-consumer-oauth/file.yaml")
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+	assert.Equal(string(expected), output)
 }
 
 /*
@@ -710,8 +729,12 @@ func TestWriteKongStateToKICStdoutStateWithOneConsumerACLGroup(t *testing.T) {
 			WithID: true,
 		})
 	})
-	expected := fmt.Sprintf("{[\n  {\n    \"kind\": \"KongPlugin\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"acl-instance\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"config\": {\n      \"allow\": [\n        \"admin-group\",\n        \"retail-group\",\n        \"banking-group\"\n      ]\n    },\n    \"plugin\": \"acl\"\n  }\n][\n  {\n    \"kind\": \"Secret\",\n    \"apiVersion\": \"v1\",\n    \"metadata\": {\n      \"name\": \"ACLGroup-\",\n      \"creationTimestamp\": null\n    },\n    \"stringData\": {\n      \"group\": \"admin-group\",\n      \"kongCredType\": \"acl\"\n    }\n  }\n][\n  {\n    \"kind\": \"KongConsumer\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"my-consumer\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"konghq.com/plugins\": \"acl-instance\"\n      }\n    },\n    \"username\": \"my-consumer\",\n    \"custom_id\": \"my-custom-id\",\n    \"credentials\": [\n      \"ACLGroup-\"\n    ]\n  }\n]}")
-	assert.Equal(expected, output)
+
+	expected, err := os.ReadFile("testdata/kic-consumer-acl/file.yaml")
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+	assert.Equal(string(expected), output)
 }
 
 /*
@@ -768,8 +791,12 @@ func TestWriteKongStateToKICStdoutStateWithOneConsumerMTLSAuth(t *testing.T) {
 			WithID: true,
 		})
 	})
-	expected := fmt.Sprintf("{[\n  {\n    \"kind\": \"KongPlugin\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"mtls-auth-instance\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"config\": {\n      \"ca_certificates\": [\n        \"fdac360e-7b19-4ade-a553-6dd22937c82f\"\n      ],\n      \"http_proxy_host\": \"example\",\n      \"http_proxy_port\": 80\n    },\n    \"plugin\": \"mtls-auth\"\n  }\n][\n  {\n    \"kind\": \"Secret\",\n    \"apiVersion\": \"v1\",\n    \"metadata\": {\n      \"name\": \"MTLSAuth-\",\n      \"creationTimestamp\": null,\n      \"labels\": {\n        \"konghq.com/ca-cert\": \"true\"\n      },\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"stringData\": {\n      \"cert\": \"-----BEGIN CERTIFICATE-----\\nMIICATCCAWoCCQDZq7X6Z3Qz7TANBgkqhkiG9w0BAQsFADBFMQswCQYDVQQGEwJV\\nUzELMAkGA1UECAwCQ0ExEjAQBgNVBAcMCUNpdHkgQnVzaW5lc3MxDTALBgNVBAoM\\nBE9yZzEUMBIGA1UECwwLU2VjdXJpdHkgQ0ExGDAWBgNVBAMMD2V4YW1wbGUuY29t\\nMB4XDTIwMDUyNzE5MjY0MVoXDTIxMDUyNjE5MjY0MVowRTELMAkGA1UEBhMCVVMx\\nCzAJBgNVBAgMAkNBMRIwEAYDVQQHDAlDaXR5IEJ1c2luZXNzMQ0wCwYDVQQKDARP\\ncmcxFDASBgNVBAsMC1NlY3VyaXR5IENBMRowGAYDVQQDDB9leGFtcGxlLmNvbSAt\\nIE9yZzEwWTATBg-----END CERTIFICATE-----\",\n      \"cert_digest\": \"2ZXt/8T161gL9mW1UlORjjXBnp/v1gtHausPyeQJiWw=\",\n      \"id\": \"fdac360e-7b19-4ade-a553-6dd22937c82f\",\n      \"kongCredType\": \"mtls-auth\",\n      \"subject_name\": \"CN=example.com,OU=OrgUnit,O=Org,L=City,ST=State,C=US\"\n    },\n    \"type\": \"Opaque\"\n  }\n][\n  {\n    \"kind\": \"KongConsumer\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"my-consumer\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"konghq.com/plugins\": \"mtls-auth-instance\"\n      }\n    },\n    \"username\": \"my-consumer\",\n    \"custom_id\": \"my-custom-id\",\n    \"credentials\": [\n      \"MTLSAuth-\"\n    ]\n  }\n]}")
-	assert.Equal(expected, output)
+
+	expected, err := os.ReadFile("testdata/kic-consumer-mtls/file.yaml")
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+	assert.Equal(string(expected), output)
 }
 
 /*
@@ -870,8 +897,11 @@ func TestWriteKongStateToKICStdoutStateWithTwoRoutes(t *testing.T) {
 		})
 	})
 	
-	expected := fmt.Sprintf("{[\n  {\n    \"kind\": \"KongIngress\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"route1-name\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"route\": {\n      \"methods\": [\n        \"GET\",\n        \"POST\"\n      ],\n      \"protocols\": [\n        \"http\",\n        \"https\"\n      ],\n      \"strip_path\": true,\n      \"preserve_host\": false\n    }\n  },\n  {\n    \"kind\": \"KongIngress\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"route2-name\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"route\": {\n      \"methods\": [\n        \"GET\",\n        \"POST\"\n      ],\n      \"protocols\": [\n        \"http\",\n        \"https\"\n      ],\n      \"regex_priority\": 0,\n      \"strip_path\": true,\n      \"preserve_host\": false,\n      \"response_buffering\": true\n    }\n  }\n][\n  {\n    \"kind\": \"KongPlugin\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"response-transformer-instance\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"config\": {\n      \"add\": \"config-value\"\n    },\n    \"plugin\": \"response-transformer\"\n  },\n  {\n    \"kind\": \"KongPlugin\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"request-transformer-instance\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"config\": {\n      \"add\": \"config-value\"\n    },\n    \"plugin\": \"request-transformer\"\n  },\n  {\n    \"kind\": \"KongPlugin\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"oas-validation-instance\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"config\": {\n      \"api_spec\": \"openapi...\"\n    },\n    \"plugin\": \"oas-validation\"\n  }\n][\n  {\n    \"kind\": \"Ingress\",\n    \"apiVersion\": \"networking.k8s.io/v1\",\n    \"metadata\": {\n      \"name\": \"route1-name\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"konghq.com/override\": \"route1-name\",\n        \"konghq.com/plugins\": \"response-transformer-instance\"\n      }\n    },\n    \"spec\": {\n      \"rules\": [\n        {\n          \"host\": \"host1.kong.lan\",\n          \"http\": {\n            \"paths\": [\n              {\n                \"path\": \"/my-first-path\",\n                \"pathType\": null,\n                \"backend\": {\n                  \"service\": {\n                    \"name\": \"my-service\",\n                    \"port\": {\n                      \"number\": 8888\n                    }\n                  }\n                }\n              }\n            ]\n          }\n        }\n      ]\n    },\n    \"status\": {\n      \"loadBalancer\": {}\n    }\n  },\n  {\n    \"kind\": \"Ingress\",\n    \"apiVersion\": \"networking.k8s.io/v1\",\n    \"metadata\": {\n      \"name\": \"route2-name\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"konghq.com/override\": \"route2-name\",\n        \"konghq.com/plugins\": \"request-transformer-instance\"\n      }\n    },\n    \"spec\": {\n      \"rules\": [\n        {\n          \"host\": \"host1.kong.lan\",\n          \"http\": {\n            \"paths\": [\n              {\n                \"path\": \"/my-second-path\",\n                \"pathType\": null,\n                \"backend\": {\n                  \"service\": {\n                    \"name\": \"my-service\",\n                    \"port\": {\n                      \"number\": 8888\n                    }\n                  }\n                }\n              }\n            ]\n          }\n        }\n      ]\n    },\n    \"status\": {\n      \"loadBalancer\": {}\n    }\n  }\n][\n  {\n    \"kind\": \"Service\",\n    \"apiVersion\": \"v1\",\n    \"metadata\": {\n      \"name\": \"my-service\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"konghq.com/plugins\": \"oas-validation-instance\"\n      }\n    },\n    \"spec\": {\n      \"ports\": [\n        {\n          \"protocol\": \"TCP\",\n          \"port\": 8888,\n          \"targetPort\": 8888\n        }\n      ],\n      \"selector\": {\n        \"app\": \"my-service\"\n      }\n    },\n    \"status\": {\n      \"loadBalancer\": {}\n    }\n  }\n]}")
-	assert.Equal(expected, output)
+	expected, err := os.ReadFile("testdata/kic-two-routes-two-services-plugins/file.yaml")
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+	assert.Equal(string(expected), output)
 }
 
 /*
@@ -905,8 +935,12 @@ func TestWriteKongStateToKICStdoutStateWithTwoServices(t *testing.T) {
 			WithID: true,
 		})
 	})
-	expected := fmt.Sprintf("{[\n  {\n    \"kind\": \"Service\",\n    \"apiVersion\": \"v1\",\n    \"metadata\": {\n      \"name\": \"my-service1\",\n      \"creationTimestamp\": null\n    },\n    \"spec\": {\n      \"ports\": [\n        {\n          \"protocol\": \"TCP\",\n          \"port\": 1025,\n          \"targetPort\": 1025\n        }\n      ],\n      \"selector\": {\n        \"app\": \"my-service1\"\n      }\n    },\n    \"status\": {\n      \"loadBalancer\": {}\n    }\n  },\n  {\n    \"kind\": \"Service\",\n    \"apiVersion\": \"v1\",\n    \"metadata\": {\n      \"name\": \"my-service2\",\n      \"creationTimestamp\": null\n    },\n    \"spec\": {\n      \"ports\": [\n        {\n          \"protocol\": \"UDP\",\n          \"port\": 1125,\n          \"targetPort\": 1125\n        }\n      ],\n      \"selector\": {\n        \"app\": \"my-service2\"\n      }\n    },\n    \"status\": {\n      \"loadBalancer\": {}\n    }\n  }\n]}")
-	assert.Equal(expected, output)
+
+	expected, err := os.ReadFile("testdata/kic-two-services/file.yaml")
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+	assert.Equal(string(expected), output)
 }
 
 
@@ -953,8 +987,12 @@ func TestWriteKongStateToKICStdoutStateWithServiceAndUpstream(t *testing.T) {
 			WithID: true,
 		})
 	})
-	expected := fmt.Sprintf("{[\n  {\n    \"kind\": \"KongIngress\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"my-service1.kong.lan\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"upstream\": {\n      \"algorithm\": \"consistent-hashing\",\n      \"hash_on\": \"header\",\n      \"hash_fallback\": \"ip\",\n      \"hash_on_header\": \"x-lb\"\n    },\n    \"proxy\": {\n      \"protocol\": \"TCP\",\n      \"retries\": 5,\n      \"connect_timeout\": 1000,\n      \"read_timeout\": 1000,\n      \"write_timeout\": 1000\n    }\n  }\n][\n  {\n    \"kind\": \"Service\",\n    \"apiVersion\": \"v1\",\n    \"metadata\": {\n      \"name\": \"my-service1\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"konghq.com/override\": \"my-service1.kong.lan\"\n      }\n    },\n    \"spec\": {\n      \"ports\": [\n        {\n          \"protocol\": \"TCP\",\n          \"port\": 1025,\n          \"targetPort\": 1025\n        }\n      ],\n      \"selector\": {\n        \"app\": \"my-service1\"\n      }\n    },\n    \"status\": {\n      \"loadBalancer\": {}\n    }\n  }\n]}")
-	assert.Equal(expected, output)
+
+	expected, err := os.ReadFile("testdata/kic-service-and-upstream/file.yaml")
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+	assert.Equal(string(expected), output)
 }
 
 /*
@@ -988,6 +1026,10 @@ func TestWriteKongStateToKICStdoutStateWithTwoClusterPlugins(t *testing.T) {
 			WithID: true,
 		})
 	})
-	expected := fmt.Sprintf("{[\n  {\n    \"kind\": \"KongClusterPlugin\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"instance-UUID\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"config\": {\n      \"add\": \"config-value\"\n    },\n    \"plugin\": \"request-transformer\"\n  },\n  {\n    \"kind\": \"KongClusterPlugin\",\n    \"apiVersion\": \"configuration.konghq.com/v1\",\n    \"metadata\": {\n      \"name\": \"instance-UUID\",\n      \"creationTimestamp\": null,\n      \"annotations\": {\n        \"kubernetes.io/ingress.class\": \"kong\"\n      }\n    },\n    \"config\": {\n      \"add\": \"config-value\"\n    },\n    \"plugin\": \"response-transformer\"\n  }\n]}")
-	assert.Equal(expected, output)
+
+	expected, err := os.ReadFile("testdata/kic_two_cluster_plugins/file.yaml")
+	if err != nil {
+		assert.Fail(err.Error())
+	}
+	assert.Equal(string(expected), output)
 }

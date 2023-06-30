@@ -12,6 +12,7 @@ import (
 	kicv1 "github.com/kong/kubernetes-ingress-controller/v2/pkg/apis/configuration/v1"
 	k8scorev1 "k8s.io/api/core/v1"
 	k8snetv1 "k8s.io/api/networking/v1"
+	"sigs.k8s.io/yaml"
 )
 
 // Format is a file format for Kong's configuration.
@@ -737,7 +738,7 @@ type Content struct {
 // +k8s:deepcopy-gen=true
 type KICContent struct {
 	KongIngresses      []kicv1.KongIngress       `json:"kongIngresses,omitempty" yaml:",omitempty"`
-	KongPlugins        []kicv1.KongPlugin        `json:",omitempty" yaml:",omitempty"`
+	KongPlugins        []kicv1.KongPlugin        `json:"kongPlugins,omitempty" yaml:",omitempty"`
 	KongClusterPlugins []kicv1.KongClusterPlugin `json:"clusterPlugins,omitempty" yaml:",omitempty"`
 	Ingresses          []k8snetv1.Ingress        `json:"ingresses,omitempty" yaml:",omitempty"`
 	Services           []k8scorev1.Service       `json:"services,omitempty" yaml:",omitempty"`
@@ -755,56 +756,133 @@ func (k KICContent) marshalKICContent() ([]byte, error) {
 	var secrets []byte
 	var kongConsumers []byte
 	var err error
+	var output []byte
 
-	if k.KongIngresses != nil {
-		kongIngresses, err = json.MarshalIndent(k.KongIngresses, "", "  ")
+	// iterate over the slices of kongIngresses, kongPlugins,
+	// kongClusterPlugins, ingresses, services, secrets, kongConsumers
+	// and marshal each one in yaml format
+	// and append it to the output slice
+	// then return the output slice
+	for _, kongIngress := range k.KongIngresses {
+		kongIngresses, err = yaml.Marshal(kongIngress)
 		if err != nil {
 			return nil, err
 		}
+		output = append(output, kongIngresses...)
+		output = append(output, []byte("---\n")...)
 	}
 
-	if k.KongPlugins != nil {
-		kongPlugins, err = json.MarshalIndent(k.KongPlugins, "", "  ")
+	for _, kongPlugin := range k.KongPlugins {
+		kongPlugins, err = yaml.Marshal(kongPlugin)
 		if err != nil {
 			return nil, err
 		}
+		output = append(output, kongPlugins...)
+		output = append(output, []byte("---\n")...)
+
 	}
 
-	if k.KongClusterPlugins != nil {
-		kongClusterPlugins, err = json.MarshalIndent(k.KongClusterPlugins, "", "  ")
+	for _, kongClusterPlugin := range k.KongClusterPlugins {
+		kongClusterPlugins, err = yaml.Marshal(kongClusterPlugin)
 		if err != nil {
 			return nil, err
 		}
+		output = append(output, kongClusterPlugins...)
+		output = append(output, []byte("---\n")...)
+
 	}
 
-	if k.Ingresses != nil {
-		ingresses, err = json.MarshalIndent(k.Ingresses, "", "  ")
+	for _, ingress := range k.Ingresses {
+		ingresses, err = yaml.Marshal(ingress)
 		if err != nil {
 			return nil, err
 		}
+		output = append(output, ingresses...)
+		output = append(output, []byte("---\n")...)
+
 	}
 
-	if k.Services != nil {
-		services, err = json.MarshalIndent(k.Services, "", "  ")
+	for _, service := range k.Services {
+		services, err = yaml.Marshal(service)
 		if err != nil {
 			return nil, err
 		}
+		output = append(output, services...)
+		output = append(output, []byte("---\n")...)
+
 	}
 
-	if k.Secrets != nil {
-		secrets, err = json.MarshalIndent(k.Secrets, "", "  ")
+	for _, secret := range k.Secrets {
+		secrets, err = yaml.Marshal(secret)
 		if err != nil {
 			return nil, err
 		}
+		output = append(output, secrets...)
+		output = append(output, []byte("---\n")...)
+
 	}
 
-	if k.KongConsumers != nil {
-		kongConsumers, err = json.MarshalIndent(k.KongConsumers, "", "  ")
+	for _, kongConsumer := range k.KongConsumers {
+		kongConsumers, err = yaml.Marshal(kongConsumer)
 		if err != nil {
 			return nil, err
 		}
+		output = append(output, kongConsumers...)
+		output = append(output, []byte("---\n")...)
+
 	}
 
-	return []byte(fmt.Sprintf(`{%s%s%s%s%s%s%s}`,
-		kongIngresses, kongPlugins, kongClusterPlugins, ingresses, services, secrets, kongConsumers)), nil
+	return output, nil
 }
+
+// if k.KongIngresses != nil {
+// 	kongIngresses, err = json.MarshalIndent(k.KongIngresses, "", "  ")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// }
+
+// if k.KongPlugins != nil {
+// 	kongPlugins, err = json.MarshalIndent(k.KongPlugins, "", "  ")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// }
+
+// if k.KongClusterPlugins != nil {
+// 	kongClusterPlugins, err = json.MarshalIndent(k.KongClusterPlugins, "", "  ")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// }
+
+// if k.Ingresses != nil {
+// 	ingresses, err = json.MarshalIndent(k.Ingresses, "", "  ")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// }
+
+// if k.Services != nil {
+// 	services, err = json.MarshalIndent(k.Services, "", "  ")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// }
+
+// if k.Secrets != nil {
+// 	secrets, err = json.MarshalIndent(k.Secrets, "", "  ")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// }
+
+// if k.KongConsumers != nil {
+// 	kongConsumers, err = json.MarshalIndent(k.KongConsumers, "", "  ")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// }
+
+// return []byte(fmt.Sprintf(`{%s%s%s%s%s%s%s}`,
+// 	kongIngresses, kongPlugins, kongClusterPlugins, ingresses, services, secrets, kongConsumers)), nil

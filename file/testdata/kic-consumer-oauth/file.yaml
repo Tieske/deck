@@ -1,0 +1,41 @@
+apiVersion: configuration.konghq.com/v1
+config:
+  enable_authorization_code: "true"
+  mandatory_scope: "true"
+  scopes:
+  - email
+  - phone
+  - address
+  token_expiration: 7200
+kind: KongPlugin
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: oauth2-instance
+plugin: oauth2
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: OAuth2Cred-
+stringData:
+  client_id: oauth-client-id
+  client_secret: oauth-client-secret
+  client_type: confidential
+  hash_secret: "false"
+  kongCredType: oauth2
+---
+apiVersion: configuration.konghq.com/v1
+credentials:
+- OAuth2Cred-
+custom_id: my-custom-id
+kind: KongConsumer
+metadata:
+  annotations:
+    konghq.com/plugins: oauth2-instance
+  creationTimestamp: null
+  name: my-consumer
+username: my-consumer
+---
