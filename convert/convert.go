@@ -21,6 +21,8 @@ const (
 	FormatKongGateway2x Format = "kong-gateway-2.x"
 	// FormatKongGateway3x represents the Kong gateway 3.x format.
 	FormatKongGateway3x Format = "kong-gateway-3.x"
+	// FormatKongGatewayIngress represents the Kong gateway ingress controller format.
+	FormatKongGatewayIngress Format = "kong-gateway-ingress"
 )
 
 // AllFormats contains all available formats.
@@ -37,6 +39,8 @@ func ParseFormat(key string) (Format, error) {
 		return FormatKongGateway2x, nil
 	case FormatKongGateway3x:
 		return FormatKongGateway3x, nil
+	case FormatKongGatewayIngress:
+		return FormatKongGatewayIngress, nil
 	default:
 		return "", fmt.Errorf("invalid format: '%v'", key)
 	}
@@ -46,7 +50,11 @@ func Convert(inputFilename, outputFilename string, from, to Format) error {
 	var (
 		outputContent *file.Content
 		err           error
+		outputFileFormat file.Format
 	)
+
+	// defaults to YAML
+	outputFileFormat = file.YAML
 
 	inputContent, err := file.GetContentFromFiles([]string{inputFilename})
 	if err != nil {
@@ -59,6 +67,11 @@ func Convert(inputFilename, outputFilename string, from, to Format) error {
 		if err != nil {
 			return err
 		}
+	case from == FormatKongGateway && to == FormatKongGatewayIngress:
+		outputContent = inputContent.DeepCopy()
+		// change output file format to YAML Ingress Controller K8s Manifests
+		outputFileFormat = file.KIC
+
 	case from == FormatKongGateway2x && to == FormatKongGateway3x:
 		outputContent, err = convertKongGateway2xTo3x(inputContent, inputFilename)
 		if err != nil {
@@ -68,7 +81,8 @@ func Convert(inputFilename, outputFilename string, from, to Format) error {
 		return fmt.Errorf("cannot convert from '%s' to '%s' format", from, to)
 	}
 
-	err = file.WriteContentToFile(outputContent, outputFilename, file.YAML)
+	err = file.WriteContentToFile(outputContent, outputFilename, outputFileFormat)
+	
 	if err != nil {
 		return err
 	}

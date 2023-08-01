@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -815,7 +816,6 @@ func ContentToKIC(content *Content) ([]byte, error) {
 		return nil, err
 	}
 
-	//return json.MarshalIndent(file, "", "  ")
 	return file.marshalKICContent()
 }
 func populateKICKongClusterPlugins(content *Content, file *KICContent) error {
@@ -825,9 +825,13 @@ func populateKICKongClusterPlugins(content *Content, file *KICContent) error {
 		var kongPlugin kicv1.KongClusterPlugin
 		kongPlugin.APIVersion = "configuration.konghq.com/v1"
 		kongPlugin.Kind = "KongClusterPlugin"
-		kongPlugin.ObjectMeta.Name = *plugin.InstanceName 
+		if plugin.InstanceName != nil {
+			kongPlugin.ObjectMeta.Name = *plugin.InstanceName
+		}
 		kongPlugin.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
-		kongPlugin.PluginName = *plugin.Name
+		if plugin.Name != nil {
+			kongPlugin.PluginName = *plugin.Name
+		}
 
 		// transform the plugin config from map[string]interface{} to apiextensionsv1.JSON
 		var configJSON apiextensionsv1.JSON
@@ -850,7 +854,11 @@ func populateKICServicesAndIngresses(content *Content, file *KICContent) error {
 
 		k8sService.TypeMeta.APIVersion = "v1"
 		k8sService.TypeMeta.Kind = "Service"
-		k8sService.ObjectMeta.Name = *service.Name 
+		if service.Name != nil {
+			k8sService.ObjectMeta.Name = *service.Name
+		} else {
+			log.Println("Service without a name is not recommended")
+		}
 		k8sService.ObjectMeta.Annotations = make(map[string]string)
 
 		// default TCP unless service.Protocol is equal to k8scorev1.ProtocolUDP
@@ -860,14 +868,20 @@ func populateKICServicesAndIngresses(content *Content, file *KICContent) error {
 			protocol = k8scorev1.ProtocolTCP
 		}
 
-		sPort := k8scorev1.ServicePort{
-			Protocol:   protocol,
-			Port:       int32(*service.Port),
-			TargetPort: intstr.IntOrString{IntVal: int32(*service.Port)},
+		if service.Port != nil {
+			sPort := k8scorev1.ServicePort{
+				Protocol:   protocol,
+				Port:       int32(*service.Port),
+				TargetPort: intstr.IntOrString{IntVal: int32(*service.Port)},
+			}
+			k8sService.Spec.Ports = append(k8sService.Spec.Ports, sPort)
 		}
-		k8sService.Spec.Ports = append(k8sService.Spec.Ports, sPort)
 
-		k8sService.Spec.Selector = map[string]string{"app": *service.Name}
+		if service.Name != nil {
+			k8sService.Spec.Selector = map[string]string{"app": *service.Name}
+		} else {
+			log.Println("Service without a name is not recommended")
+		}
 
 		populateKICUpstreams(content, &service, &k8sService, file)
 
@@ -882,7 +896,7 @@ func populateKICServicesAndIngresses(content *Content, file *KICContent) error {
 			var kongPlugin kicv1.KongPlugin
 			kongPlugin.APIVersion = "configuration.konghq.com/v1"
 			kongPlugin.Kind = "KongPlugin"
-			kongPlugin.ObjectMeta.Name = *plugin.InstanceName 
+			kongPlugin.ObjectMeta.Name = *plugin.InstanceName
 			kongPlugin.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 			kongPlugin.PluginName = *plugin.Name
 
@@ -909,15 +923,29 @@ func populateKICServicesAndIngresses(content *Content, file *KICContent) error {
 
 func populateKICUpstreams(content *Content, service *FService, k8sservice *k8scorev1.Service, file *KICContent) {
 
-	// Find content.upstreams whose name matches the service host and copy the upstream
+	var kongIngress kicv1.KongIngress
+	kongIngress.APIVersion = "configuration.konghq.com/v1"
+	kongIngress.Kind = "KongIngress"
+	kongIngress.ObjectMeta.Name = *service.Name
+	kongIngress.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
+
+	// add an annotation to the k8sservice to link this kongIngress to it
+	k8sservice.ObjectMeta.Annotations["konghq.com/override"] = kongIngress.ObjectMeta.Name
+
+	// proxy attributes from the service to the kongIngress
+	kongIngress.Proxy = &kicv1.KongIngressService{
+		Protocol:       service.Protocol,
+		Path:           service.Path,
+		Retries:        service.Retries,
+		ConnectTimeout: service.ConnectTimeout,
+		WriteTimeout:   service.WriteTimeout,
+		ReadTimeout:    service.ReadTimeout,
+	}
+
+	// Find the upstream (if any) whose name matches the service host and copy the upstream
 	// into a kicv1.KongIngress resource. Append the kicv1.KongIngress to kicContent.KongIngresses.
 	for _, upstream := range content.Upstreams {
 		if upstream.Name != nil && strings.EqualFold(*upstream.Name, *service.Host) {
-			var kongIngress kicv1.KongIngress
-			kongIngress.APIVersion = "configuration.konghq.com/v1"
-			kongIngress.Kind = "KongIngress"
-			kongIngress.ObjectMeta.Name = *upstream.Name 
-			kongIngress.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 			kongIngress.Upstream = &kicv1.KongIngressUpstream{
 				HostHeader:             upstream.HostHeader,
 				Algorithm:              upstream.Algorithm,
@@ -934,21 +962,9 @@ func populateKICUpstreams(content *Content, service *FService, k8sservice *k8sco
 				HashOnURICapture:       upstream.HashOnURICapture,
 				HashFallbackURICapture: upstream.HashFallbackURICapture,
 			}
-			// proxy attributes from the service to the kongIngress
-			kongIngress.Proxy = &kicv1.KongIngressService{
-				Protocol:       service.Protocol,
-				Path:           service.Path,
-				Retries:        service.Retries,
-				ConnectTimeout: service.ConnectTimeout,
-				WriteTimeout:   service.WriteTimeout,
-				ReadTimeout:    service.ReadTimeout,
-			}
-
-			file.KongIngresses = append(file.KongIngresses, kongIngress)
-			// Add an annotation to the service to link this kongIngress to it
-			k8sservice.ObjectMeta.Annotations["konghq.com/override"]= kongIngress.ObjectMeta.Name
 		}
 	}
+	file.KongIngresses = append(file.KongIngresses, kongIngress)
 }
 
 func populateKICIngresses(service *FService, file *KICContent) error {
@@ -959,75 +975,26 @@ func populateKICIngresses(service *FService, file *KICContent) error {
 		// assign them the plugins for this route
 		var routeIngresses []k8snetv1.Ingress
 
-		for _, host := range route.Hosts {
-			for _, path := range route.Paths {
-				var k8sIngress k8snetv1.Ingress
-				k8sIngress.TypeMeta.APIVersion = "networking.k8s.io/v1"
-				k8sIngress.TypeMeta.Kind = "Ingress"
-				k8sIngress.ObjectMeta.Name = *route.Name 
-				k8sIngress.Spec.Rules = append(k8sIngress.Spec.Rules, k8snetv1.IngressRule{
-					Host: *host,
-					IngressRuleValue: k8snetv1.IngressRuleValue{
-						HTTP: &k8snetv1.HTTPIngressRuleValue{
-							Paths: []k8snetv1.HTTPIngressPath{
-								{
-									Path: *path,
-									Backend: k8snetv1.IngressBackend{
-										Service: &k8snetv1.IngressServiceBackend{
-											Name: *service.Name,
-											Port: k8snetv1.ServiceBackendPort{
-												Number: int32(*service.Port),
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				})
+		// if there are no hosts just use the paths
+		if len(route.Hosts) == 0 {
+			routeIngresses = routePathToIngress(route, nil, service, routeIngresses, file)
+		} else {
+			// iterate over the hosts and paths and create an ingress for each
 
+			for _, host := range route.Hosts {
 				//  create a KongIngress resource and copy route data into it
-				var kongIngress kicv1.KongIngress
-				kongIngress.APIVersion = "configuration.konghq.com/v1"
-				kongIngress.Kind = "KongIngress"
-				kongIngress.ObjectMeta.Name = *route.Name 
-				kongIngress.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
-
-				var kongProtocols []*kicv1.KongProtocol
-				for _, protocol := range route.Protocols {
-					p := kicv1.KongProtocol(*protocol)
-					kongProtocols = append(kongProtocols, &p)
-				}
-
-				kongIngress.Route = &kicv1.KongIngressRoute{
-					Methods:                 route.Methods,
-					Protocols:               kongProtocols,
-					StripPath:               route.StripPath,
-					PreserveHost:            route.PreserveHost,
-					RegexPriority:           route.RegexPriority,
-					HTTPSRedirectStatusCode: route.HTTPSRedirectStatusCode,
-					Headers:                 route.Headers,
-					PathHandling:            route.PathHandling,
-					SNIs:                    route.SNIs,
-					RequestBuffering:        route.RequestBuffering,
-					ResponseBuffering:       route.ResponseBuffering,
-				}
-
 				// add annotation to the ingress to link it to the kongIngress
-				k8sIngress.ObjectMeta.Annotations = map[string]string{"konghq.com/override": kongIngress.ObjectMeta.Name}
+				routeIngresses = routePathToIngress(route, host, service, routeIngresses, file)
 
-				routeIngresses = append(routeIngresses, k8sIngress)
-
-				file.Ingresses = append(file.Ingresses, k8sIngress)
-				file.KongIngresses = append(file.KongIngresses, kongIngress)
 			}
-
 		}
 		for _, plugin := range route.Plugins {
 			var kongPlugin kicv1.KongPlugin
 			kongPlugin.APIVersion = "configuration.konghq.com/v1"
 			kongPlugin.Kind = "KongPlugin"
-			kongPlugin.ObjectMeta.Name = *plugin.InstanceName 
+			if plugin.InstanceName != nil {
+				kongPlugin.ObjectMeta.Name = *plugin.InstanceName
+			}
 			kongPlugin.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 			kongPlugin.PluginName = *plugin.Name
 
@@ -1040,9 +1007,14 @@ func populateKICIngresses(service *FService, file *KICContent) error {
 			}
 			kongPlugin.Config = configJSON
 
-			// create a plugins annotation in the routeIngresses to link them to this plugin
+			// create a plugins annotation in the routeIngresses to link them to this plugin.
+			// separate plugins with commas
 			for _, k8sIngress := range routeIngresses {
-				k8sIngress.ObjectMeta.Annotations["konghq.com/plugins"] = kongPlugin.ObjectMeta.Name
+				if k8sIngress.ObjectMeta.Annotations["konghq.com/plugins"] == "" {
+					k8sIngress.ObjectMeta.Annotations["konghq.com/plugins"] = kongPlugin.PluginName
+				} else {
+					k8sIngress.ObjectMeta.Annotations["konghq.com/plugins"] = k8sIngress.ObjectMeta.Annotations["konghq.com/plugins"] + "," + kongPlugin.PluginName
+				}
 			}
 
 			file.KongPlugins = append(file.KongPlugins, kongPlugin)
@@ -1051,13 +1023,136 @@ func populateKICIngresses(service *FService, file *KICContent) error {
 	return nil
 }
 
+func routePathToIngress(route *FRoute, host *string, service *FService, routeIngresses []k8snetv1.Ingress, file *KICContent) []k8snetv1.Ingress {
+	for _, path := range route.Paths {
+		var k8sIngress k8snetv1.Ingress
+		k8sIngress.TypeMeta.APIVersion = "networking.k8s.io/v1"
+		k8sIngress.TypeMeta.Kind = "Ingress"
+		k8sIngress.ObjectMeta.Name = *route.Name
+
+		// Host and/or Service.Port can be nil. There are 4 possible combinations.
+		if host != nil && service.Port != nil {
+			k8sIngress.Spec.Rules = append(k8sIngress.Spec.Rules, k8snetv1.IngressRule{
+				Host: *host,
+				IngressRuleValue: k8snetv1.IngressRuleValue{
+					HTTP: &k8snetv1.HTTPIngressRuleValue{
+						Paths: []k8snetv1.HTTPIngressPath{
+							{
+								Path: *path,
+								Backend: k8snetv1.IngressBackend{
+									Service: &k8snetv1.IngressServiceBackend{
+										Name: *service.Name,
+										Port: k8snetv1.ServiceBackendPort{
+											Number: int32(*service.Port),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			})
+		} else if host == nil && service.Port != nil {
+			k8sIngress.Spec.Rules = append(k8sIngress.Spec.Rules, k8snetv1.IngressRule{
+				IngressRuleValue: k8snetv1.IngressRuleValue{
+					HTTP: &k8snetv1.HTTPIngressRuleValue{
+						Paths: []k8snetv1.HTTPIngressPath{
+							{
+								Path: *path,
+								Backend: k8snetv1.IngressBackend{
+									Service: &k8snetv1.IngressServiceBackend{
+										Name: *service.Name,
+										Port: k8snetv1.ServiceBackendPort{
+											Number: int32(*service.Port),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			})
+		} else if host != nil && service.Port == nil {
+			k8sIngress.Spec.Rules = append(k8sIngress.Spec.Rules, k8snetv1.IngressRule{
+				Host: *host,
+				IngressRuleValue: k8snetv1.IngressRuleValue{
+					HTTP: &k8snetv1.HTTPIngressRuleValue{
+						Paths: []k8snetv1.HTTPIngressPath{
+							{
+								Path: *path,
+								Backend: k8snetv1.IngressBackend{
+									Service: &k8snetv1.IngressServiceBackend{
+										Name: *service.Name,
+									},
+								},
+							},
+						},
+					},
+				},
+			})
+		} else {
+			// host == nil && service.Port == nil
+			k8sIngress.Spec.Rules = append(k8sIngress.Spec.Rules, k8snetv1.IngressRule{
+				IngressRuleValue: k8snetv1.IngressRuleValue{
+					HTTP: &k8snetv1.HTTPIngressRuleValue{
+						Paths: []k8snetv1.HTTPIngressPath{
+							{
+								Path: *path,
+								Backend: k8snetv1.IngressBackend{
+									Service: &k8snetv1.IngressServiceBackend{
+										Name: *service.Name,
+									},
+								},
+							},
+						},
+					},
+				},
+			})
+		}
+
+		var kongIngress kicv1.KongIngress
+		kongIngress.APIVersion = "configuration.konghq.com/v1"
+		kongIngress.Kind = "KongIngress"
+		kongIngress.ObjectMeta.Name = *route.Name
+		kongIngress.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
+
+		var kongProtocols []*kicv1.KongProtocol
+		for _, protocol := range route.Protocols {
+			p := kicv1.KongProtocol(*protocol)
+			kongProtocols = append(kongProtocols, &p)
+		}
+
+		kongIngress.Route = &kicv1.KongIngressRoute{
+			Methods:                 route.Methods,
+			Protocols:               kongProtocols,
+			StripPath:               route.StripPath,
+			PreserveHost:            route.PreserveHost,
+			RegexPriority:           route.RegexPriority,
+			HTTPSRedirectStatusCode: route.HTTPSRedirectStatusCode,
+			Headers:                 route.Headers,
+			PathHandling:            route.PathHandling,
+			SNIs:                    route.SNIs,
+			RequestBuffering:        route.RequestBuffering,
+			ResponseBuffering:       route.ResponseBuffering,
+		}
+
+		k8sIngress.ObjectMeta.Annotations = map[string]string{"konghq.com/override": kongIngress.ObjectMeta.Name}
+
+		routeIngresses = append(routeIngresses, k8sIngress)
+
+		file.Ingresses = append(file.Ingresses, k8sIngress)
+		file.KongIngresses = append(file.KongIngresses, kongIngress)
+	}
+	return routeIngresses
+}
+
 func populateKICConsumers(content *Content, file *KICContent) error {
 	// Iterate content.Consumers and copy them into kicv1.KongConsumer, then into KICContent.KongConsumers
 	for _, consumer := range content.Consumers {
 		var kongConsumer kicv1.KongConsumer
 		kongConsumer.APIVersion = "configuration.konghq.com/v1"
 		kongConsumer.Kind = "KongConsumer"
-		kongConsumer.ObjectMeta.Name = *consumer.Username 
+		kongConsumer.ObjectMeta.Name = *consumer.Username
 		kongConsumer.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 		kongConsumer.Username = *consumer.Username
 		if consumer.CustomID != nil {
@@ -1079,9 +1174,13 @@ func populateKICConsumers(content *Content, file *KICContent) error {
 			var kongPlugin kicv1.KongPlugin
 			kongPlugin.APIVersion = "configuration.konghq.com/v1"
 			kongPlugin.Kind = "KongPlugin"
-			kongPlugin.ObjectMeta.Name = *plugin.InstanceName 
+			if plugin.InstanceName != nil {
+				kongPlugin.ObjectMeta.Name = *plugin.InstanceName
+			}
 			kongPlugin.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
-			kongPlugin.PluginName = *plugin.Name
+			if plugin.Name != nil {
+				kongPlugin.PluginName = *plugin.Name
+			}
 
 			// transform the plugin config from map[string]interface{} to apiextensionsv1.JSON
 			var configJSON apiextensionsv1.JSON
@@ -1106,7 +1205,7 @@ func populateKICMTLSAuthSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCon
 	// iterate consumer.MTLSAuths and copy them into k8scorev1.Secret, then add them to kicContent.Secrets
 	for _, mtlsAuth := range consumer.MTLSAuths {
 		var secret k8scorev1.Secret
-		var secretName = "MTLSAuth-" 
+		var secretName = "MTLSAuth-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
 		secret.Type = "Opaque"
@@ -1143,7 +1242,7 @@ func populateKICACLGroupSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCon
 	// iterate consumer.ACLGroups and copy them into k8scorev1.Secret, then add them to kicContent.Secrets
 	for _, aclGroup := range consumer.ACLGroups {
 		var secret k8scorev1.Secret
-		var secretName = "ACLGroup-" 
+		var secretName = "ACLGroup-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
 		secret.ObjectMeta.Name = secretName
@@ -1165,7 +1264,7 @@ func populateKICOAuth2CredSecrets(consumer *FConsumer, kongConsumer *kicv1.KongC
 	// iterate consumer.OAuth2Creds and copy them into k8scorev1.Secret, then add them to kicContent.Secrets
 	for _, oauth2Cred := range consumer.Oauth2Creds {
 		var secret k8scorev1.Secret
-		var secretName = "OAuth2Cred-" 
+		var secretName = "OAuth2Cred-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
 		secret.ObjectMeta.Name = secretName
@@ -1199,7 +1298,7 @@ func populateKICBasicAuthSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCo
 	// iterate consumer.BasicAuths and copy them into k8scorev1.Secret, then add them to kicContent.Secrets
 	for _, basicAuth := range consumer.BasicAuths {
 		var secret k8scorev1.Secret
-		var secretName = "BasicAuth-" 
+		var secretName = "BasicAuth-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
 		secret.ObjectMeta.Name = secretName
@@ -1224,7 +1323,7 @@ func populateKICJWTAuthSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCons
 	// iterate consumer.JWTAuths and copy them into k8scorev1.Secret, then add them to kicContent.Secrets
 	for _, jwtAuth := range consumer.JWTAuths {
 		var secret k8scorev1.Secret
-		var secretName = "JWTAuth-" 
+		var secretName = "JWTAuth-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
 		secret.ObjectMeta.Name = secretName
@@ -1259,7 +1358,7 @@ func populateKICHMACSecrets(consumer *FConsumer, kongConsumer *kicv1.KongConsume
 	// iterate consumer.HMACAuths and copy them into k8scorev1.Secret, then add them to kicContent.Secrets
 	for _, hmacAuth := range consumer.HMACAuths {
 		var secret k8scorev1.Secret
-		var secretName = "HMACAuth-" 
+		var secretName = "HMACAuth-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
 		secret.ObjectMeta.Name = secretName
@@ -1286,7 +1385,7 @@ func populateKICKeyAuthSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCons
 	// add the secret name to the kongConsumer.credentials
 	for _, keyAuth := range consumer.KeyAuths {
 		var secret k8scorev1.Secret
-		var secretName = "KeyAuth-" 
+		var secretName = "KeyAuth-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
 		secret.ObjectMeta.Name = secretName

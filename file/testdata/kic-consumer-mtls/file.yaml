@@ -20,7 +20,7 @@ metadata:
   creationTimestamp: null
   labels:
     konghq.com/ca-cert: "true"
-  name: MTLSAuth-
+  name: MTLSAuth-my-consumer
 stringData:
   cert: |-
     -----BEGIN CERTIFICATE-----
@@ -39,7 +39,7 @@ type: Opaque
 ---
 apiVersion: configuration.konghq.com/v1
 credentials:
-- MTLSAuth-
+- MTLSAuth-my-consumer
 custom_id: my-custom-id
 kind: KongConsumer
 metadata:

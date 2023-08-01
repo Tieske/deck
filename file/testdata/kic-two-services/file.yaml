@@ -1,6 +1,28 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongIngress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: my-service1
+proxy:
+  protocol: TCP
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongIngress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: my-service2
+proxy:
+  protocol: UDP
+---
 apiVersion: v1
 kind: Service
 metadata:
+  annotations:
+    konghq.com/override: my-service1
   creationTimestamp: null
   name: my-service1
 spec:
@@ -16,6 +38,8 @@ status:
 apiVersion: v1
 kind: Service
 metadata:
+  annotations:
+    konghq.com/override: my-service2
   creationTimestamp: null
   name: my-service2
 spec:

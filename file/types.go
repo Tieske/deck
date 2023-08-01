@@ -27,6 +27,7 @@ const (
 	JSON = "JSON"
 	// YAML if YAML file format.
 	YAML = "YAML"
+	// KIC is YAML file format for ingress controller.
 	KIC  = "KIC"
 )
 

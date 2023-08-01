@@ -19,7 +19,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   creationTimestamp: null
-  name: OAuth2Cred-
+  name: OAuth2Cred-my-consumer
 stringData:
   client_id: oauth-client-id
   client_secret: oauth-client-secret
@@ -29,7 +29,7 @@ stringData:
 ---
 apiVersion: configuration.konghq.com/v1
 credentials:
-- OAuth2Cred-
+- OAuth2Cred-my-consumer
 custom_id: my-custom-id
 kind: KongConsumer
 metadata:

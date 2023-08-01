@@ -81,7 +81,7 @@ can be converted into a 'kong-gateway-3.x' configuration file.`,
 	}
 
 	sourceFormats := []convert.Format{convert.FormatKongGateway, convert.FormatKongGateway2x}
-	destinationFormats := []convert.Format{convert.FormatKonnect, convert.FormatKongGateway3x}
+	destinationFormats := []convert.Format{convert.FormatKonnect, convert.FormatKongGateway3x, convert.FormatKongGatewayIngress}
 	convertCmd.Flags().StringVar(&convertCmdSourceFormat, "from", "",
 		fmt.Sprintf("format of the source file, allowed formats: %v", sourceFormats))
 	convertCmd.Flags().StringVar(&convertCmdDestinationFormat, "to", "",

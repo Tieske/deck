@@ -1,6 +1,7 @@
 package convert
 
 import (
+	"os"
 	"reflect"
 	"testing"
 
@@ -45,6 +46,14 @@ func TestParseFormat(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "parses valid values",
+			args: args{
+				key: "kong-gateway-ingress",
+			},
+			want:    FormatKongGatewayIngress,
+			wantErr: false,
+		},
+		{
 			name: "parses values in a case-insensitive manner",
 			args: args{
 				key: "koNNect",
@@ -60,6 +69,7 @@ func TestParseFormat(t *testing.T) {
 			want:    "",
 			wantErr: true,
 		},
+		
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -238,6 +248,7 @@ func Test_Convert(t *testing.T) {
 			wantErr: false,
 		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := Convert(tt.args.inputFilename, tt.args.outputFilename, tt.args.fromFormat,
@@ -382,6 +393,99 @@ func Test_convertKongGatewayToKonnect(t *testing.T) {
 			}
 			if err != nil {
 				assert.Equal(t, tt.want, got)
+			}
+		})
+	}
+}
+
+func Test_convertKongGatewayToIngress(t *testing.T) {
+	type args struct {
+		inputFilename          string
+		outputFilename         string
+		fromFormat             Format
+		toFormat               Format
+		expectedOutputFilename string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{
+			name: "convert one service",
+			args: args{
+				inputFilename: "testdata_ingress/1/input.yaml",
+				fromFormat:    FormatKongGateway,
+				toFormat:      FormatKongGatewayIngress,
+				outputFilename:         "testdata_ingress/1/output.yaml",
+				expectedOutputFilename: "testdata_ingress/1/output-expected.yaml",
+			},
+			wantErr: false,
+		},
+		{
+			name: "convert one service with upstream",
+			args: args{
+				inputFilename: "testdata_ingress/2/input.yaml",
+				fromFormat:    FormatKongGateway,
+				toFormat:      FormatKongGatewayIngress,
+				outputFilename:         "testdata_ingress/2/output.yaml",
+				expectedOutputFilename: "testdata_ingress/2/output-expected.yaml",
+			},
+			wantErr: false,
+		},
+		{
+			name: "convert one service with upstream and route",
+			args: args{
+				inputFilename: "testdata_ingress/3/input.yaml",
+				fromFormat:    FormatKongGateway,
+				toFormat:      FormatKongGatewayIngress,
+				outputFilename:         "testdata_ingress/3/output.yaml",
+				expectedOutputFilename: "testdata_ingress/3/output-expected.yaml",
+			},
+			wantErr: false,
+		},
+		{
+			name: "convert one service with upstream, route and consumer",
+			args: args{
+				inputFilename: "testdata_ingress/4/input.yaml",
+				fromFormat:    FormatKongGateway,
+				toFormat:      FormatKongGatewayIngress,
+				outputFilename:         "testdata_ingress/4/output.yaml",
+				expectedOutputFilename: "testdata_ingress/4/output-expected.yaml",
+			},
+			wantErr: false,
+		},
+		{
+			name: "convert one service with upstream, route-plugins, consumer",
+			args: args{
+				inputFilename: "testdata_ingress/5/input.yaml",
+				fromFormat:    FormatKongGateway,
+				toFormat:      FormatKongGatewayIngress,
+				outputFilename:         "testdata_ingress/5/output.yaml",
+				expectedOutputFilename: "testdata_ingress/5/output-expected.yaml",
+			},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := Convert(tt.args.inputFilename, tt.args.outputFilename, tt.args.fromFormat,
+				tt.args.toFormat)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Convert() error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			if err == nil {
+
+				expected, err := os.ReadFile(tt.args.expectedOutputFilename)
+				if err != nil {
+					assert.Fail(t, err.Error())
+				}
+				output , err := os.ReadFile(tt.args.outputFilename)
+				if err != nil {
+					assert.Fail(t, err.Error())
+				}
+				assert.Equal(t, expected, output)
 			}
 		})
 	}

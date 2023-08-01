@@ -14,14 +14,14 @@ apiVersion: v1
 kind: Secret
 metadata:
   creationTimestamp: null
-  name: KeyAuth-
+  name: KeyAuth-my-consumer
 stringData:
   key: key-auth-key
   kongCredType: key-auth
 ---
 apiVersion: configuration.konghq.com/v1
 credentials:
-- KeyAuth-
+- KeyAuth-my-consumer
 custom_id: my-custom-id
 kind: KongConsumer
 metadata:

@@ -16,14 +16,14 @@ apiVersion: v1
 kind: Secret
 metadata:
   creationTimestamp: null
-  name: ACLGroup-
+  name: ACLGroup-my-consumer
 stringData:
   group: admin-group
   kongCredType: acl
 ---
 apiVersion: configuration.konghq.com/v1
 credentials:
-- ACLGroup-
+- ACLGroup-my-consumer
 custom_id: my-custom-id
 kind: KongConsumer
 metadata:

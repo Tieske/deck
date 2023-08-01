@@ -13,7 +13,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   creationTimestamp: null
-  name: HMACAuth-
+  name: HMACAuth-my-consumer
 stringData:
   kongCredType: hmac-auth
   secret: hmac-secret
@@ -21,7 +21,7 @@ stringData:
 ---
 apiVersion: configuration.konghq.com/v1
 credentials:
-- HMACAuth-
+- HMACAuth-my-consumer
 custom_id: my-custom-id
 kind: KongConsumer
 metadata:

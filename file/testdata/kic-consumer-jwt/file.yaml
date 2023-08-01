@@ -14,7 +14,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   creationTimestamp: null
-  name: JWTAuth-
+  name: JWTAuth-my-consumer
 stringData:
   algorithm: HS256
   key: YJdmaDvVTJxtcWRCvkMikc8oELgAVNcz
@@ -23,7 +23,7 @@ stringData:
 ---
 apiVersion: configuration.konghq.com/v1
 credentials:
-- JWTAuth-
+- JWTAuth-my-consumer
 custom_id: my-custom-id
 kind: KongConsumer
 metadata:
