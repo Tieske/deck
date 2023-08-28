@@ -896,7 +896,9 @@ func populateKICServicesAndIngresses(content *Content, file *KICContent) error {
 			var kongPlugin kicv1.KongPlugin
 			kongPlugin.APIVersion = "configuration.konghq.com/v1"
 			kongPlugin.Kind = "KongPlugin"
-			kongPlugin.ObjectMeta.Name = *plugin.Name
+			if plugin.Name != nil {
+				kongPlugin.ObjectMeta.Name = *plugin.Name
+			}
 			kongPlugin.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 			kongPlugin.PluginName = *plugin.Name
 
