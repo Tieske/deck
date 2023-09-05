@@ -27,7 +27,7 @@ func executeKong2Kic(cmd *cobra.Command, _ []string) error {
 	verbosity, _ := cmd.Flags().GetInt("verbose")
 	logbasics.Initialize(log.LstdFlags, verbosity)
 
-	inputContent, err := file.GetContentFromFiles([]string{cmdKong2KicInputFilename})
+	inputContent, err := file.GetContentFromFiles([]string{cmdKong2KicInputFilename}, false)
 	if err != nil {
 		return fmt.Errorf("failed reding input file '%s'; %w", cmdKong2KicInputFilename, err)
 	}

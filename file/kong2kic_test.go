@@ -60,7 +60,7 @@ func Test_convertKongGatewayToIngress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			inputContent, err := GetContentFromFiles([]string{tt.args.inputFilename})
+			inputContent, err := GetContentFromFiles([]string{tt.args.inputFilename}, false)
 			if err != nil {
 				assert.Fail(t, err.Error())
 			}
