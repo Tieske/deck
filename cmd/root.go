@@ -187,7 +187,7 @@ It can be used to export, import, or sync entities to Kong.`,
 		rootCmd.PersistentFlags().Lookup("konnect-token"))
 
 	rootCmd.PersistentFlags().String("konnect-token-file", "",
-		"File containing the Peronsal Access Token to your Konnect account.")
+		"File containing the Personal Access Token to your Konnect account.")
 	viper.BindPFlag("konnect-token-file",
 		rootCmd.PersistentFlags().Lookup("konnect-token-file"))
 
@@ -224,6 +224,7 @@ It can be used to export, import, or sync entities to Kong.`,
 		fileCmd.AddCommand(newMergeCmd())
 		fileCmd.AddCommand(newPatchCmd())
 		fileCmd.AddCommand(newOpenapi2KongCmd())
+		fileCmd.AddCommand(newFileRenderCmd())
 		fileCmd.AddCommand(newKong2KicCmd())
 	}
 	return rootCmd
