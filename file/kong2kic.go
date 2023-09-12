@@ -220,8 +220,8 @@ func populateKICIngresses(service *FService, file *KICContent) error {
 			var kongPlugin kicv1.KongPlugin
 			kongPlugin.APIVersion = "configuration.konghq.com/v1"
 			kongPlugin.Kind = "KongPlugin"
-			if plugin.InstanceName != nil {
-				kongPlugin.ObjectMeta.Name = *plugin.InstanceName
+			if plugin.Name != nil {
+				kongPlugin.ObjectMeta.Name = *plugin.Name
 			}
 			kongPlugin.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 			kongPlugin.PluginName = *plugin.Name
@@ -254,9 +254,13 @@ func populateKICIngresses(service *FService, file *KICContent) error {
 func routePathToIngress(route *FRoute, host *string, service *FService, routeIngresses []k8snetv1.Ingress, file *KICContent) []k8snetv1.Ingress {
 	for _, path := range route.Paths {
 		var k8sIngress k8snetv1.Ingress
+		var pathTypeImplSpecific k8snetv1.PathType = k8snetv1.PathTypeImplementationSpecific
 		k8sIngress.TypeMeta.APIVersion = "networking.k8s.io/v1"
 		k8sIngress.TypeMeta.Kind = "Ingress"
 		k8sIngress.ObjectMeta.Name = *route.Name
+		ingressClassName := "kong"
+		k8sIngress.Spec.IngressClassName = &ingressClassName
+		
 
 		// Host and/or Service.Port can be nil. There are 4 possible combinations.
 		if host != nil && service.Port != nil {
@@ -266,7 +270,8 @@ func routePathToIngress(route *FRoute, host *string, service *FService, routeIng
 					HTTP: &k8snetv1.HTTPIngressRuleValue{
 						Paths: []k8snetv1.HTTPIngressPath{
 							{
-								Path: *path,
+								Path:     *path,
+								PathType: &pathTypeImplSpecific,
 								Backend: k8snetv1.IngressBackend{
 									Service: &k8snetv1.IngressServiceBackend{
 										Name: *service.Name,
@@ -286,7 +291,8 @@ func routePathToIngress(route *FRoute, host *string, service *FService, routeIng
 					HTTP: &k8snetv1.HTTPIngressRuleValue{
 						Paths: []k8snetv1.HTTPIngressPath{
 							{
-								Path: *path,
+								Path:     *path,
+								PathType: &pathTypeImplSpecific,
 								Backend: k8snetv1.IngressBackend{
 									Service: &k8snetv1.IngressServiceBackend{
 										Name: *service.Name,
@@ -308,6 +314,7 @@ func routePathToIngress(route *FRoute, host *string, service *FService, routeIng
 						Paths: []k8snetv1.HTTPIngressPath{
 							{
 								Path: *path,
+								PathType: &pathTypeImplSpecific,
 								Backend: k8snetv1.IngressBackend{
 									Service: &k8snetv1.IngressServiceBackend{
 										Name: *service.Name,
@@ -326,6 +333,7 @@ func routePathToIngress(route *FRoute, host *string, service *FService, routeIng
 						Paths: []k8snetv1.HTTPIngressPath{
 							{
 								Path: *path,
+								PathType: &pathTypeImplSpecific,
 								Backend: k8snetv1.IngressBackend{
 									Service: &k8snetv1.IngressServiceBackend{
 										Name: *service.Name,
@@ -338,6 +346,8 @@ func routePathToIngress(route *FRoute, host *string, service *FService, routeIng
 			})
 		}
 
+
+		// Create a KongIngress resource and copy Kong specific route data into it
 		var kongIngress kicv1.KongIngress
 		kongIngress.APIVersion = "configuration.konghq.com/v1"
 		kongIngress.Kind = "KongIngress"
@@ -364,6 +374,7 @@ func routePathToIngress(route *FRoute, host *string, service *FService, routeIng
 			ResponseBuffering:       route.ResponseBuffering,
 		}
 
+		// add an annotation to the k8sIngress to link it to the kongIngress
 		k8sIngress.ObjectMeta.Annotations = map[string]string{"konghq.com/override": kongIngress.ObjectMeta.Name}
 
 		routeIngresses = append(routeIngresses, k8sIngress)
@@ -397,7 +408,6 @@ func populateKICConsumers(content *Content, file *KICContent) error {
 
 		// for each consumer.plugin, create a KongPlugin and a plugin annotation in the kongConsumer
 		// to link the plugin
-		kongConsumer.ObjectMeta.Annotations = map[string]string{}
 		for _, plugin := range consumer.Plugins {
 			var kongPlugin kicv1.KongPlugin
 			kongPlugin.APIVersion = "configuration.konghq.com/v1"
@@ -433,11 +443,11 @@ func populateKICMTLSAuthSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCon
 	// iterate consumer.MTLSAuths and copy them into k8scorev1.Secret, then add them to kicContent.Secrets
 	for _, mtlsAuth := range consumer.MTLSAuths {
 		var secret k8scorev1.Secret
-		var secretName = "MTLSAuth-" + *consumer.Username
+		var secretName = "mtls-auth-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
 		secret.Type = "Opaque"
-		secret.ObjectMeta.Name = secretName
+		secret.ObjectMeta.Name = strings.ToLower(secretName)
 		secret.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 		secret.ObjectMeta.Labels = map[string]string{"konghq.com/ca-cert": "true"}
 		secret.StringData = make(map[string]string)
@@ -447,8 +457,8 @@ func populateKICMTLSAuthSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCon
 			secret.StringData["subject_name"] = *mtlsAuth.SubjectName
 		}
 
-		if mtlsAuth.CACertificate != nil && mtlsAuth.CACertificate.ID != nil {
-			secret.StringData["id"] = *mtlsAuth.CACertificate.ID
+		if mtlsAuth.ID != nil {
+			secret.StringData["id"] = *mtlsAuth.ID
 		}
 
 		if mtlsAuth.CACertificate != nil && mtlsAuth.CACertificate.Cert != nil {
@@ -470,10 +480,11 @@ func populateKICACLGroupSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCon
 	// iterate consumer.ACLGroups and copy them into k8scorev1.Secret, then add them to kicContent.Secrets
 	for _, aclGroup := range consumer.ACLGroups {
 		var secret k8scorev1.Secret
-		var secretName = "ACLGroup-" + *consumer.Username
+		var secretName = "acl-group-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
-		secret.ObjectMeta.Name = secretName
+		secret.ObjectMeta.Name = strings.ToLower(secretName)
+		secret.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 		secret.StringData = make(map[string]string)
 
 		secret.StringData["kongCredType"] = "acl"
@@ -492,12 +503,18 @@ func populateKICOAuth2CredSecrets(consumer *FConsumer, kongConsumer *kicv1.KongC
 	// iterate consumer.OAuth2Creds and copy them into k8scorev1.Secret, then add them to kicContent.Secrets
 	for _, oauth2Cred := range consumer.Oauth2Creds {
 		var secret k8scorev1.Secret
-		var secretName = "OAuth2Cred-" + *consumer.Username
+		var secretName = "oauth2cred-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
-		secret.ObjectMeta.Name = secretName
+		secret.ObjectMeta.Name = strings.ToLower(secretName)
+		secret.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 		secret.StringData = make(map[string]string)
 		secret.StringData["kongCredType"] = "oauth2"
+
+		if oauth2Cred.Name != nil {
+			secret.StringData["name"] = *oauth2Cred.Name
+		}
+
 		if oauth2Cred.ClientID != nil {
 			secret.StringData["client_id"] = *oauth2Cred.ClientID
 		}
@@ -505,7 +522,6 @@ func populateKICOAuth2CredSecrets(consumer *FConsumer, kongConsumer *kicv1.KongC
 		if oauth2Cred.ClientSecret != nil {
 			secret.StringData["client_secret"] = *oauth2Cred.ClientSecret
 		}
-		// TODO secret.StringData["redirect_uris"] = strings.Join(oauth2Cred.RedirectURIs[:], ",")
 
 		if oauth2Cred.ClientType != nil {
 			secret.StringData["client_type"] = *oauth2Cred.ClientType
@@ -526,10 +542,11 @@ func populateKICBasicAuthSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCo
 	// iterate consumer.BasicAuths and copy them into k8scorev1.Secret, then add them to kicContent.Secrets
 	for _, basicAuth := range consumer.BasicAuths {
 		var secret k8scorev1.Secret
-		var secretName = "BasicAuth-" + *consumer.Username
+		var secretName = "basic-auth-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
-		secret.ObjectMeta.Name = secretName
+		secret.ObjectMeta.Name = strings.ToLower(secretName)
+		secret.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 		secret.StringData = make(map[string]string)
 		secret.StringData["kongCredType"] = "basic-auth"
 
@@ -551,10 +568,11 @@ func populateKICJWTAuthSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCons
 	// iterate consumer.JWTAuths and copy them into k8scorev1.Secret, then add them to kicContent.Secrets
 	for _, jwtAuth := range consumer.JWTAuths {
 		var secret k8scorev1.Secret
-		var secretName = "JWTAuth-" + *consumer.Username
+		var secretName = "jwt-auth-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
-		secret.ObjectMeta.Name = secretName
+		secret.ObjectMeta.Name = strings.ToLower(secretName)
+		secret.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 		secret.StringData = make(map[string]string)
 		secret.StringData["kongCredType"] = "jwt"
 
@@ -586,10 +604,11 @@ func populateKICHMACSecrets(consumer *FConsumer, kongConsumer *kicv1.KongConsume
 	// iterate consumer.HMACAuths and copy them into k8scorev1.Secret, then add them to kicContent.Secrets
 	for _, hmacAuth := range consumer.HMACAuths {
 		var secret k8scorev1.Secret
-		var secretName = "HMACAuth-" + *consumer.Username
+		var secretName = "hmac-auth-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
-		secret.ObjectMeta.Name = secretName
+		secret.ObjectMeta.Name = strings.ToLower(secretName)
+		secret.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 		secret.StringData = make(map[string]string)
 		secret.StringData["kongCredType"] = "hmac-auth"
 
@@ -613,10 +632,11 @@ func populateKICKeyAuthSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCons
 	// add the secret name to the kongConsumer.credentials
 	for _, keyAuth := range consumer.KeyAuths {
 		var secret k8scorev1.Secret
-		var secretName = "KeyAuth-" + *consumer.Username
+		var secretName = "key-auth-" + *consumer.Username
 		secret.TypeMeta.APIVersion = "v1"
 		secret.TypeMeta.Kind = "Secret"
-		secret.ObjectMeta.Name = secretName
+		secret.ObjectMeta.Name = strings.ToLower(secretName)
+		secret.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
 		secret.StringData = make(map[string]string)
 		secret.StringData["kongCredType"] = "key-auth"
 

@@ -43,18 +43,12 @@ services:
         sources:
           - ip: 192.168.0.1
         plugins:
-          - name: acl
-            config:
-              whitelist: admin
           - name: aws-lambda
             config:
               aws_key: my_key
               aws_secret: my_secret
               function_name: my_function
-              region: us-west-2
-          - name: basic-auth
-            config:
-              hide_credentials: false
+              aws_region: us-west-2
           - name: cors
             config:
               origins:
@@ -83,110 +77,35 @@ services:
               queue_size: 1000
           - name: ip-restriction
             config:
-              whitelist:
+              allow:
                 - 192.168.0.1/24
-              blacklist:
+              deny:
                 - 192.168.0.2/32
-          - name: jwt
+          - name: rate-limiting-advanced
             config:
-              uri_param_names:
-                - token
-              claims_to_verify:
-                - exp
-                - nbf
-              key_claim_name: kid
-              secret_is_base64: false
-              anonymous: null
-              run_on_preflight: true
-              maximum_expiration: 3600
-              header_names:
-                - Authorization
-          - name: key-auth
-            config:
-              hide_credentials: false
-              key_names:
-                - apikey
-              key_in_body: false
-              run_on_preflight: true
-          - name: oauth2
-            config:
-              scopes:
-                - email
-                - phone
-              mandatory_scope: false
-              provision_key: my_provision_key
-              token_expiration: 3600
-              enable_authorization_code: true
-              enable_implicit_grant: true
-              enable_client_credentials: true
-              enable_password_grant: true
-              enable_refresh_token: true
-              refresh_token_ttl: 1209600
-              anonymous: null
-              hide_credentials: false
-              accept_http_if_already_terminated: false
-              provision_key_derived_secret: false
-          - name: rate-limiting
-            config:
-              second: 10
-              minute: 100
-              hour: 1000
-              day: 10000
-              month: 100000
-              policy: local
-              redis_host: localhost
-              redis_port: 6379
-              redis_password: null
-              redis_timeout: 2000
-              redis_database: 0
-              fault_tolerant: true
-              limit_by: consumer
-              header_name: X-RateLimit-Limit
-              header_limit: 100
-              header_remaining: 50
-              header_reset: 1553100000
-              key_prefix: my_prefix
+              limit:
+              - 5
+              window_size:
+              - 30
+              identifier: consumer
+              sync_rate: -1
+              namespace: example_namespace
+              strategy: local
+              hide_client_headers: false
           - name: request-termination
             config:
               status_code: 403
               message: Forbidden
-              body: null
-              content_type: text/plain
           - name: response-ratelimiting
             config:
               limits:
-                - second: 10
-                  limit: 100
-                - minute: 1000
-                  limit: 10000
+                limit_name:
+                  minute: 10
               policy: local
-              redis_host: localhost
-              redis_port: 6379
-              redis_password: null
-              redis_timeout: 2000
-              redis_database: 0
-              fault_tolerant: true
-              header_name: X-RateLimit-Limit
-              header_limit: 100
-              header_remaining: 50
-              header_reset: 1553100000
-              key_prefix: my_prefix
           - name: tcp-log
             config:
               host: example.com
               port: 1234
-              timeout: 10000
-              tls: false
-              tls_sni: null
-              tls_verify: false
-              tls_cert: null
-              tls_key: null
-              tls_protocols:
-                - TLSv1.1
-                - TLSv1.2
-              tls_ciphers:
-                - ECDHE-RSA-AES128-GCM-SHA256
-                - ECDHE-ECDSA-AES128-GCM-SHA256
 upstreams:
   - name: example-api.com
     algorithm: round-robin
@@ -273,38 +192,3 @@ consumers:
     custom_id: "1234567890"
     tags:
       - internal
-    keyauth_credentials:
-      - key: my_api_key
-        tags:
-          - internal
-    jwt_secrets:
-      - key: my_jwt_secret
-        algorithm: HS256
-        secret: my_secret_key
-        tags:
-          - internal
-    oauth2_credentials:
-      - name: my_oauth2_app
-        client_id: oauth2_client_id
-        client_secret: oauth2_client_secret
-        redirect_uris:
-          - https://example-app.com/callback
-        tags:
-          - internal
-    hmacauth_credentials:
-      - username: my_hmac_user
-        secret: my_hmac_secret
-        tags:
-          - internal
-    basicauth_credentials:
-      - username: my_basic_user
-        password: my_basic_password
-        tags:
-          - internal
-    mtls_auth_credentials:
-      - id: bda09448-3b10-4da7-a83b-2a8ba6021f0c
-        subject_name: example-user@example.com
-    acls:
-      - group: acl_group
-        tags:
-          - internal

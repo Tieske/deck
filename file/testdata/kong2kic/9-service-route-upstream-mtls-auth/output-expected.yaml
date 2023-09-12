@@ -114,14 +114,31 @@ route:
   - example.com
   strip_path: false
 ---
+apiVersion: configuration.konghq.com/v1
+config:
+  ca_certificates:
+  - cce8c384-721f-4f58-85dd-50834e3e733a
+  revocation_check_mode: SKIP
+  skip_consumer_lookup: true
+kind: KongPlugin
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: mtls-auth
+plugin: mtls-auth
+status: {}
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
     konghq.com/override: example-route
+    konghq.com/plugins: mtls-auth
   creationTimestamp: null
   name: example-route
 spec:
+  ingressClassName: kong
   rules:
   - host: example.com
     http:
@@ -132,7 +149,7 @@ spec:
             port:
               number: 80
         path: /v1/example
-        pathType: null
+        pathType: ImplementationSpecific
 status:
   loadBalancer: {}
 ---
@@ -156,89 +173,28 @@ status:
 apiVersion: v1
 kind: Secret
 metadata:
-  creationTimestamp: null
-  name: KeyAuth-example-user
-stringData:
-  key: my_api_key
-  kongCredType: key-auth
----
-apiVersion: v1
-kind: Secret
-metadata:
-  creationTimestamp: null
-  name: HMACAuth-example-user
-stringData:
-  kongCredType: hmac-auth
-  secret: my_hmac_secret
-  username: my_hmac_user
----
-apiVersion: v1
-kind: Secret
-metadata:
-  creationTimestamp: null
-  name: JWTAuth-example-user
-stringData:
-  algorithm: HS256
-  key: my_jwt_secret
-  kongCredType: jwt
-  secret: my_secret_key
----
-apiVersion: v1
-kind: Secret
-metadata:
-  creationTimestamp: null
-  name: BasicAuth-example-user
-stringData:
-  kongCredType: basic-auth
-  password: my_basic_password
-  username: my_basic_user
----
-apiVersion: v1
-kind: Secret
-metadata:
-  creationTimestamp: null
-  name: OAuth2Cred-example-user
-stringData:
-  client_id: oauth2_client_id
-  client_secret: oauth2_client_secret
-  kongCredType: oauth2
----
-apiVersion: v1
-kind: Secret
-metadata:
-  creationTimestamp: null
-  name: ACLGroup-example-user
-stringData:
-  group: acl_group
-  kongCredType: acl
----
-apiVersion: v1
-kind: Secret
-metadata:
   annotations:
     kubernetes.io/ingress.class: kong
   creationTimestamp: null
   labels:
     konghq.com/ca-cert: "true"
-  name: MTLSAuth-example-user
+  name: mtls-auth-example-user
 stringData:
+  id: cce8c384-721f-4f58-85dd-50834e3e733a
   kongCredType: mtls-auth
   subject_name: example-user@example.com
 type: Opaque
 ---
 apiVersion: configuration.konghq.com/v1
 credentials:
-- KeyAuth-example-user
-- HMACAuth-example-user
-- JWTAuth-example-user
-- BasicAuth-example-user
-- OAuth2Cred-example-user
-- ACLGroup-example-user
-- MTLSAuth-example-user
+- mtls-auth-example-user
 custom_id: "1234567890"
 kind: KongConsumer
 metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
   creationTimestamp: null
   name: example-user
+status: {}
 username: example-user
 ---

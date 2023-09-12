@@ -42,6 +42,10 @@ services:
           - example.com
         sources:
           - ip: 192.168.0.1
+        plugins:
+          - name: basic-auth
+            config:
+              hide_credentials: false
 upstreams:
   - name: example-api.com
     algorithm: round-robin
@@ -128,38 +132,8 @@ consumers:
     custom_id: "1234567890"
     tags:
       - internal
-    keyauth_credentials:
-      - key: my_api_key
-        tags:
-          - internal
-    jwt_secrets:
-      - key: my_jwt_secret
-        algorithm: HS256
-        secret: my_secret_key
-        tags:
-          - internal
-    oauth2_credentials:
-      - name: my_oauth2_app
-        client_id: oauth2_client_id
-        client_secret: oauth2_client_secret
-        redirect_uris:
-          - https://example-app.com/callback
-        tags:
-          - internal
-    hmacauth_credentials:
-      - username: my_hmac_user
-        secret: my_hmac_secret
-        tags:
-          - internal
     basicauth_credentials:
       - username: my_basic_user
         password: my_basic_password
-        tags:
-          - internal
-    mtls_auth_credentials:
-      - id: bda09448-3b10-4da7-a83b-2a8ba6021f0c
-        subject_name: example-user@example.com
-    acls:
-      - group: acl_group
         tags:
           - internal

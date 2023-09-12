@@ -114,14 +114,28 @@ route:
   - example.com
   strip_path: false
 ---
+apiVersion: configuration.konghq.com/v1
+config:
+  hide_credentials: false
+kind: KongPlugin
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: basic-auth
+plugin: basic-auth
+status: {}
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
     konghq.com/override: example-route
+    konghq.com/plugins: basic-auth
   creationTimestamp: null
   name: example-route
 spec:
+  ingressClassName: kong
   rules:
   - host: example.com
     http:
@@ -132,7 +146,7 @@ spec:
             port:
               number: 80
         path: /v1/example
-        pathType: null
+        pathType: ImplementationSpecific
 status:
   loadBalancer: {}
 ---
@@ -152,4 +166,29 @@ spec:
     app: example-service
 status:
   loadBalancer: {}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: basic-auth-example-user
+stringData:
+  kongCredType: basic-auth
+  password: my_basic_password
+  username: my_basic_user
+---
+apiVersion: configuration.konghq.com/v1
+credentials:
+- basic-auth-example-user
+custom_id: "1234567890"
+kind: KongConsumer
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: kong
+  creationTimestamp: null
+  name: example-user
+status: {}
+username: example-user
 ---
