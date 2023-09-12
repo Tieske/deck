@@ -47,7 +47,7 @@ services:
             config:
               ca_certificates:
                 - cce8c384-721f-4f58-85dd-50834e3e733a
-              skip_consumer_lookup: true
+              skip_consumer_lookup: false
               revocation_check_mode: SKIP
 upstreams:
   - name: example-api.com

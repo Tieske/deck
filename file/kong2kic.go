@@ -449,7 +449,6 @@ func populateKICMTLSAuthSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCon
 		secret.Type = "Opaque"
 		secret.ObjectMeta.Name = strings.ToLower(secretName)
 		secret.ObjectMeta.Annotations = map[string]string{"kubernetes.io/ingress.class": "kong"}
-		secret.ObjectMeta.Labels = map[string]string{"konghq.com/ca-cert": "true"}
 		secret.StringData = make(map[string]string)
 		secret.StringData["kongCredType"] = "mtls-auth"
 
@@ -462,11 +461,7 @@ func populateKICMTLSAuthSecrets(consumer *FConsumer, kongConsumer *kicv1.KongCon
 		}
 
 		if mtlsAuth.CACertificate != nil && mtlsAuth.CACertificate.Cert != nil {
-			secret.StringData["cert"] = *mtlsAuth.CACertificate.Cert
-		}
-
-		if mtlsAuth.CACertificate != nil && mtlsAuth.CACertificate.CertDigest != nil {
-			secret.StringData["cert_digest"] = *mtlsAuth.CACertificate.CertDigest
+			secret.StringData["ca_certificate"] = *mtlsAuth.CACertificate.Cert
 		}
 
 		// add the secret name to the kongConsumer.credentials

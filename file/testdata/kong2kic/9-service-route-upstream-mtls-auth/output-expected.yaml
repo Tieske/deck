@@ -119,7 +119,7 @@ config:
   ca_certificates:
   - cce8c384-721f-4f58-85dd-50834e3e733a
   revocation_check_mode: SKIP
-  skip_consumer_lookup: true
+  skip_consumer_lookup: false
 kind: KongPlugin
 metadata:
   annotations:
@@ -176,8 +176,6 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: kong
   creationTimestamp: null
-  labels:
-    konghq.com/ca-cert: "true"
   name: mtls-auth-example-user
 stringData:
   id: cce8c384-721f-4f58-85dd-50834e3e733a
