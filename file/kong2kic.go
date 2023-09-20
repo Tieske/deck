@@ -59,23 +59,38 @@ func newCustomResourceBuilder() *CustomResourceBuilder {
 }
 
 func (b *CustomResourceBuilder) buildServices(content *Content) {
-	populateKICServicesWithCustomResources(content, b.kicContent)
+	err := populateKICServicesWithCustomResources(content, b.kicContent)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (b *CustomResourceBuilder) buildRoutes(content *Content) {
-	populateKICIngressesWithCustomResources(content, b.kicContent)
+	err := populateKICIngressesWithCustomResources(content, b.kicContent)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (b *CustomResourceBuilder) buildGlobalPlugins(content *Content) {
-	populateKICKongClusterPlugins(content, b.kicContent)
+	err := populateKICKongClusterPlugins(content, b.kicContent)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (b *CustomResourceBuilder) buildConsumers(content *Content) {
-	populateKICConsumers(content, b.kicContent)
+	err := populateKICConsumers(content, b.kicContent)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (b *CustomResourceBuilder) buildConsumerGroups(content *Content) {
-	populateKICConsumerGroups(content, b.kicContent)
+	err := populateKICConsumerGroups(content, b.kicContent)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (b *CustomResourceBuilder) getContent() *KICContent {
@@ -93,23 +108,38 @@ func newAnnotationsBuilder() *AnnotationsBuilder {
 }
 
 func (b *AnnotationsBuilder) buildServices(content *Content) {
-	populateKICServicesWithAnnotations(content, b.kicContent)
+	err := populateKICServicesWithAnnotations(content, b.kicContent)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (b *AnnotationsBuilder) buildRoutes(content *Content) {
-	populateKICIngressesWithAnnotations(content, b.kicContent)
+	err := populateKICIngressesWithAnnotations(content, b.kicContent)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (b *AnnotationsBuilder) buildGlobalPlugins(content *Content) {
-	populateKICKongClusterPlugins(content, b.kicContent)
+	err := populateKICKongClusterPlugins(content, b.kicContent)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (b *AnnotationsBuilder) buildConsumers(content *Content) {
-	populateKICConsumers(content, b.kicContent)
+	err := populateKICConsumers(content, b.kicContent)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (b *AnnotationsBuilder) buildConsumerGroups(content *Content) {
-	populateKICConsumerGroups(content, b.kicContent)
+	err := populateKICConsumerGroups(content, b.kicContent)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func (b *AnnotationsBuilder) getContent() *KICContent {
@@ -140,20 +170,20 @@ func (d *Director) buildManifests(content *Content) *KICContent {
 ////////////////////
 
 func MarshalKongToKICYaml(content *Content, builderType string) ([]byte, error) {
-	kicContent, _ := convertKongToKIC(content, builderType)
+	kicContent := convertKongToKIC(content, builderType)
 	return kicContent.marshalKICContentToYaml()
 }
 
 func MarshalKongToKICJson(content *Content, builderType string) ([]byte, error) {
-	kicContent, _ := convertKongToKIC(content, builderType)
+	kicContent := convertKongToKIC(content, builderType)
 	return kicContent.marshalKICContentToJson()
 
 }
 
-func convertKongToKIC(content *Content, builderType string) (*KICContent, error) {
+func convertKongToKIC(content *Content, builderType string) (*KICContent) {
 	builder := getBuilder(builderType)
 	director := newDirector(builder)
-	return director.buildManifests(content), nil
+	return director.buildManifests(content)
 }
 
 /////
@@ -491,7 +521,7 @@ func populateKICUpstream(content *Content, service *FService, k8sservice *k8scor
 	}
 }
 
-func addPluginsToService(service FService, k8sService k8scorev1.Service, kicContent *KICContent) (bool, error) {
+func addPluginsToService(service FService, k8sService k8scorev1.Service, kicContent *KICContent)  error {
 	for _, plugin := range service.Plugins {
 		var kongPlugin kicv1.KongPlugin
 		kongPlugin.APIVersion = "configuration.konghq.com/v1"
@@ -506,7 +536,7 @@ func addPluginsToService(service FService, k8sService k8scorev1.Service, kicCont
 		var err error
 		configJSON.Raw, err = json.Marshal(plugin.Config)
 		if err != nil {
-			return true, err
+			return err
 		}
 		kongPlugin.Config = configJSON
 
@@ -514,10 +544,10 @@ func addPluginsToService(service FService, k8sService k8scorev1.Service, kicCont
 
 		kicContent.KongPlugins = append(kicContent.KongPlugins, kongPlugin)
 	}
-	return false, nil
+	return nil
 }
 
-func addPluginsToRoute(route *FRoute, routeIngresses []k8snetv1.Ingress, kicContent *KICContent) (bool, error) {
+func addPluginsToRoute(route *FRoute, routeIngresses []k8snetv1.Ingress, kicContent *KICContent) error {
 	for _, plugin := range route.Plugins {
 		var kongPlugin kicv1.KongPlugin
 		kongPlugin.APIVersion = "configuration.konghq.com/v1"
@@ -532,7 +562,7 @@ func addPluginsToRoute(route *FRoute, routeIngresses []k8snetv1.Ingress, kicCont
 		var err error
 		configJSON.Raw, err = json.Marshal(plugin.Config)
 		if err != nil {
-			return true, err
+			return err
 		}
 		kongPlugin.Config = configJSON
 
@@ -546,7 +576,7 @@ func addPluginsToRoute(route *FRoute, routeIngresses []k8snetv1.Ingress, kicCont
 
 		kicContent.KongPlugins = append(kicContent.KongPlugins, kongPlugin)
 	}
-	return false, nil
+	return nil
 }
 
 func fillIngressHostAndPortSection(host *string, service FService, k8sIngress *k8snetv1.Ingress, path *string, pathTypeImplSpecific k8snetv1.PathType) {
@@ -785,8 +815,8 @@ func populateKICServicesWithCustomResources(content *Content, kicContent *KICCon
 		// iterate over the plugins for this service, create a KongPlugin for each one and add an annotation to the service
 		// transform the plugin config from map[string]interface{} to apiextensionsv1.JSON
 		// create a plugins annotation in the k8sservice to link the plugin to it
-		shouldReturn, error := addPluginsToService(service, k8sService, kicContent)
-		if shouldReturn {
+		error := addPluginsToService(service, k8sService, kicContent)
+		if error != nil {
 			return error
 		}
 		kicContent.Services = append(kicContent.Services, k8sService)
@@ -821,8 +851,8 @@ func populateKICIngressesWithCustomResources(content *Content, kicContent *KICCo
 			// transform the plugin config from map[string]interface{} to apiextensionsv1.JSON
 			// create a plugins annotation in the routeIngresses to link them to this plugin.
 			// separate plugins with commas
-			shouldReturn, error := addPluginsToRoute(route, routeIngresses, kicContent)
-			if shouldReturn {
+			error := addPluginsToRoute(route, routeIngresses, kicContent)
+			if error != nil {
 				return error
 			}
 		}
@@ -963,8 +993,8 @@ func populateKICServicesWithAnnotations(content *Content, kicContent *KICContent
 		// iterate over the plugins for this service, create a KongPlugin for each one and add an annotation to the service
 		// transform the plugin config from map[string]interface{} to apiextensionsv1.JSON
 		// create a plugins annotation in the k8sservice to link the plugin to it
-		shouldReturn, error := addPluginsToService(service, k8sService, kicContent)
-		if shouldReturn {
+		error := addPluginsToService(service, k8sService, kicContent)
+		if error != nil {
 			return error
 		}
 
@@ -1000,8 +1030,8 @@ func populateKICIngressesWithAnnotations(content *Content, kicContent *KICConten
 			// transform the plugin config from map[string]interface{} to apiextensionsv1.JSON
 			// create a plugins annotation in the routeIngresses to link them to this plugin.
 			// separate plugins with commas
-			shouldReturn, error := addPluginsToRoute(route, routeIngresses, kicContent)
-			if shouldReturn {
+			error := addPluginsToRoute(route, routeIngresses, kicContent)
+			if error != nil {
 				return error
 			}
 		}
