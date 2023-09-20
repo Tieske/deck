@@ -130,6 +130,17 @@ func Test_convertKongGatewayToIngress(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "convert consumer groups",
+			args: args{
+				inputFilename:  "testdata/kong2kic/custom_resources/yaml/11-consumer-group/input.yaml",
+				outputFilenameYamlCRD: "testdata/kong2kic/custom_resources/yaml/11-consumer-group/output-expected.yaml",
+				outputFilenameJsonCRD: "testdata/kong2kic/custom_resources/json/11-consumer-group/output-expected.json",
+				outputFilenameYamlAnnotation: "testdata/kong2kic/annotations/yaml/11-consumer-group/output-expected.yaml",
+				outputFilenameJsonAnnotation: "testdata/kong2kic/annotations/json/11-consumer-group/output-expected.json",
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

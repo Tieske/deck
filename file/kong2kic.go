@@ -180,7 +180,7 @@ func MarshalKongToKICJson(content *Content, builderType string) ([]byte, error) 
 
 }
 
-func convertKongToKIC(content *Content, builderType string) (*KICContent) {
+func convertKongToKIC(content *Content, builderType string) *KICContent {
 	builder := getBuilder(builderType)
 	director := newDirector(builder)
 	return director.buildManifests(content)
@@ -265,7 +265,11 @@ func populateKICConsumers(content *Content, file *KICContent) error {
 			kongPlugin.Config = configJSON
 			file.KongPlugins = append(file.KongPlugins, kongPlugin)
 
-			kongConsumer.ObjectMeta.Annotations["konghq.com/plugins"] = kongPlugin.ObjectMeta.Name
+			if kongConsumer.ObjectMeta.Annotations["konghq.com/plugins"] == "" {
+				kongConsumer.ObjectMeta.Annotations["konghq.com/plugins"] = kongPlugin.PluginName
+			} else {
+				kongConsumer.ObjectMeta.Annotations["konghq.com/plugins"] = kongConsumer.ObjectMeta.Annotations["konghq.com/plugins"] + "," + kongPlugin.PluginName
+			}
 		}
 
 		file.KongConsumers = append(file.KongConsumers, kongConsumer)
@@ -521,7 +525,7 @@ func populateKICUpstream(content *Content, service *FService, k8sservice *k8scor
 	}
 }
 
-func addPluginsToService(service FService, k8sService k8scorev1.Service, kicContent *KICContent)  error {
+func addPluginsToService(service FService, k8sService k8scorev1.Service, kicContent *KICContent) error {
 	for _, plugin := range service.Plugins {
 		var kongPlugin kicv1.KongPlugin
 		kongPlugin.APIVersion = "configuration.konghq.com/v1"
@@ -540,7 +544,11 @@ func addPluginsToService(service FService, k8sService k8scorev1.Service, kicCont
 		}
 		kongPlugin.Config = configJSON
 
-		k8sService.ObjectMeta.Annotations["konghq.com/plugins"] = kongPlugin.ObjectMeta.Name
+		if k8sService.ObjectMeta.Annotations["konghq.com/plugins"] == "" {
+			k8sService.ObjectMeta.Annotations["konghq.com/plugins"] = kongPlugin.PluginName
+		} else {
+			k8sService.ObjectMeta.Annotations["konghq.com/plugins"] = k8sService.ObjectMeta.Annotations["konghq.com/plugins"] + "," + kongPlugin.PluginName
+		}
 
 		kicContent.KongPlugins = append(kicContent.KongPlugins, kongPlugin)
 	}
@@ -678,14 +686,17 @@ func populateKICConsumerGroups(content *Content, kicContent *KICContent) error {
 		// find the KongConsumer with the same username in kicContent.KongConsumers
 		// and add it to the KongConsumerGroup
 		for _, consumer := range consumerGroup.Consumers {
-			for _, kongConsumer := range kicContent.KongConsumers {
-				if kongConsumer.Username == *consumer.Username {
-					kongConsumer.ConsumerGroups = append(kongConsumer.ConsumerGroups, *consumer.Username)
+			for idx, _ := range kicContent.KongConsumers {
+				if kicContent.KongConsumers[idx].Username == *consumer.Username {
+					if kicContent.KongConsumers[idx].ConsumerGroups == nil {
+						kicContent.KongConsumers[idx].ConsumerGroups = make([]string, 0)
+					}
+					kicContent.KongConsumers[idx].ConsumerGroups = append(kicContent.KongConsumers[idx].ConsumerGroups, *consumerGroup.Name)
 				}
 			}
 		}
 
-		// for each consumer.plugin, create a KongPlugin and a plugin annotation in the kongConsumer
+		// for each consumerGroup.plugin, create a KongPlugin and a plugin annotation in the kongConsumerGroup
 		// to link the plugin
 		for _, plugin := range consumerGroup.Plugins {
 			var kongPlugin kicv1.KongPlugin
@@ -706,7 +717,11 @@ func populateKICConsumerGroups(content *Content, kicContent *KICContent) error {
 			kongPlugin.Config = configJSON
 			kicContent.KongPlugins = append(kicContent.KongPlugins, kongPlugin)
 
-			kongConsumerGroup.ObjectMeta.Annotations["konghq.com/plugins"] = kongPlugin.ObjectMeta.Name
+			if kongConsumerGroup.ObjectMeta.Annotations["konghq.com/plugins"] == "" {
+				kongConsumerGroup.ObjectMeta.Annotations["konghq.com/plugins"] = kongPlugin.PluginName
+			} else {
+				kongConsumerGroup.ObjectMeta.Annotations["konghq.com/plugins"] = kongConsumerGroup.ObjectMeta.Annotations["konghq.com/plugins"] + "," + kongPlugin.PluginName
+			}
 		}
 
 		kicContent.KongConsumerGroups = append(kicContent.KongConsumerGroups, kongConsumerGroup)

@@ -773,6 +773,7 @@ func (k KICContent) marshalKICContentToYaml() ([]byte, error) {
 	var services []byte
 	var secrets []byte
 	var kongConsumers []byte
+	var kongConsumerGroups []byte
 	var err error
 	var output []byte
 
@@ -850,6 +851,15 @@ func (k KICContent) marshalKICContentToYaml() ([]byte, error) {
 
 	}
 
+	for _, kongConsumerGroup := range k.KongConsumerGroups {
+		kongConsumerGroups, err = yaml.Marshal(kongConsumerGroup)
+		if err != nil {
+			return nil, err
+		}
+		output = append(output, kongConsumerGroups...)
+		output = append(output, []byte("---\n")...)
+	}
+
 	return output, nil
 }
 
@@ -862,6 +872,7 @@ func (k KICContent) marshalKICContentToJson() ([]byte, error) {
 	var services []byte
 	var secrets []byte
 	var kongConsumers []byte
+	var kongConsumerGroups []byte
 	var err error
 	var output []byte
 
@@ -924,6 +935,14 @@ func (k KICContent) marshalKICContentToJson() ([]byte, error) {
 			return nil, err
 		}
 		output = append(output, kongConsumers...)
+	}
+
+	for _, kongConsumerGroup := range k.KongConsumerGroups {
+		kongConsumerGroups, err = json.MarshalIndent(kongConsumerGroup, "", "    ")
+		if err != nil {
+			return nil, err
+		}
+		output = append(output, kongConsumerGroups...)
 	}
 
 	return output, nil
