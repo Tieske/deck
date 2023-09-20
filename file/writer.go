@@ -784,8 +784,23 @@ func WriteContentToFile(content *Content, filename string, format Format) error 
 		if err != nil {
 			return err
 		}
-	case KIC:
-		c, err = KongToKIC(content)
+	case KIC_JSON_CRD:
+		c, err = MarshalKongToKICJson(content, CUSTOM_RESOURCE)
+		if err != nil {
+			return err
+		}
+	case KIC_YAML_CRD:
+		c, err = MarshalKongToKICYaml(content, CUSTOM_RESOURCE)
+		if err != nil {
+			return err
+		}
+	case KIC_JSON_ANNOTATION:
+		c, err = MarshalKongToKICJson(content, ANNOTATIONS)
+		if err != nil {
+			return err
+		}
+	case KIC_YAML_ANNOTATION:
+		c, err = MarshalKongToKICYaml(content, ANNOTATIONS)
 		if err != nil {
 			return err
 		}
