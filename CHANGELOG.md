@@ -1,5 +1,7 @@
 # Table of Contents
 
+- [v1.27.1](#v1271)
+- [v1.27.0](#v1270)
 - [v1.26.1](#v1261)
 - [v1.26.0](#v1260)
 - [v1.25.0](#v1250)
@@ -63,6 +65,32 @@
 - [v0.3.0](#v030)
 - [v0.2.0](#v020)
 - [v0.1.0](#v010)
+
+## [v1.27.1]
+
+> Release date: 2023/09/27
+
+### Fixes
+
+- Fix inconsistency when managing multiple consumers having equal `username` and `custom_id` fields.
+  [#1037](https://github.com/Kong/deck/pull/1037)
+- Correct a bug preventing the deprecated `--konnect-runtime-group-name` flag to work properly.
+  [#1036](https://github.com/Kong/deck/pull/1036)
+
+
+## [v1.27.0]
+
+> Release date: 2023/09/25
+
+### Added
+
+- Add `--konnect-control-plane-name` flag and deprecate `--konnect-runtime-group-name`
+  [#1000](https://github.com/Kong/deck/pull/1000)
+
+### Fixes
+
+- Bumped `go-apiops` to `v0.1.21` to include various fixes on APIOps functionality
+  [#1029](https://github.com/Kong/deck/pull/1029)
 
 ## [v1.26.1]
 
@@ -1358,6 +1386,8 @@ No breaking changes have been introduced in this release.
 
 Debut release of decK
 
+[v1.27.1]: https://github.com/kong/deck/compare/v1.27.0...v1.27.1
+[v1.27.0]: https://github.com/kong/deck/compare/v1.26.1...v1.27.0
 [v1.26.1]: https://github.com/kong/deck/compare/v1.26.0...v1.26.1
 [v1.26.0]: https://github.com/kong/deck/compare/v1.25.0...v1.26.0
 [v1.25.0]: https://github.com/kong/deck/compare/v1.24.0...v1.25.0

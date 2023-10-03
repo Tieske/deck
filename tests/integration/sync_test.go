@@ -55,6 +55,38 @@ var (
 		},
 	}
 
+	defaultCPService = []*kong.Service{
+		{
+			ID:             kong.String("58076db2-28b6-423b-ba39-a797193017f7"),
+			Name:           kong.String("default"),
+			ConnectTimeout: kong.Int(60000),
+			Host:           kong.String("mockbin-default.org"),
+			Port:           kong.Int(80),
+			Protocol:       kong.String("http"),
+			ReadTimeout:    kong.Int(60000),
+			Retries:        kong.Int(5),
+			WriteTimeout:   kong.Int(60000),
+			Enabled:        kong.Bool(true),
+			Tags:           nil,
+		},
+	}
+
+	testCPService = []*kong.Service{
+		{
+			ID:             kong.String("58076db2-28b6-423b-ba39-a797193017f7"),
+			Name:           kong.String("test"),
+			ConnectTimeout: kong.Int(60000),
+			Host:           kong.String("mockbin-test.org"),
+			Port:           kong.Int(80),
+			Protocol:       kong.String("http"),
+			ReadTimeout:    kong.Int(60000),
+			Retries:        kong.Int(5),
+			WriteTimeout:   kong.Int(60000),
+			Enabled:        kong.Bool(true),
+			Tags:           nil,
+		},
+	}
+
 	// missing RequestBuffering, ResponseBuffering, Service, PathHandling
 	route1_143 = []*kong.Route{
 		{
@@ -1152,7 +1184,7 @@ func Test_Sync_ServicesRoutes_Till_1_4_3(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	// ignore entities fields based on Kong version
@@ -1199,7 +1231,7 @@ func Test_Sync_ServicesRoutes_Till_1_5_1(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1241,7 +1273,7 @@ func Test_Sync_ServicesRoutes_From_2_0_5_To_2_1_4(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1290,7 +1322,7 @@ func Test_Sync_ServicesRoutes_From_2_2_1_to_2_6_0(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1334,7 +1366,7 @@ func Test_Sync_ServicesRoutes_From_2_6_9_Till_2_8_0(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1375,7 +1407,7 @@ func Test_Sync_ServicesRoutes_From_3x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1416,7 +1448,7 @@ func Test_Sync_ServicesRoutes_Konnect(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1457,7 +1489,7 @@ func Test_Sync_BasicAuth_Plugin_1_4_3(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1491,7 +1523,7 @@ func Test_Sync_BasicAuth_Plugin_Earlier_Than_1_5_1(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1525,7 +1557,7 @@ func Test_Sync_BasicAuth_Plugin_1_5_1(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1574,7 +1606,7 @@ func Test_Sync_BasicAuth_Plugin_From_2_0_5_Till_2_8_0(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1608,7 +1640,7 @@ func Test_Sync_BasicAuth_Plugin_From_3x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1642,7 +1674,7 @@ func Test_Sync_BasicAuth_Plugin_Konnect(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1678,7 +1710,7 @@ func Test_Sync_Upstream_Target_Till_1_5_2(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	// ignore entities fields based on Kong version
@@ -1733,7 +1765,7 @@ func Test_Sync_Upstream_Target_From_2x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1768,7 +1800,7 @@ func Test_Sync_Upstream_Target_From_30(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1803,7 +1835,7 @@ func Test_Sync_Upstream_Target_From_3x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1838,7 +1870,7 @@ func Test_Sync_Upstream_Target_Konnect(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1881,7 +1913,7 @@ func Test_Sync_Upstreams_Target_ZeroWeight_2x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1916,7 +1948,7 @@ func Test_Sync_Upstreams_Target_ZeroWeight_30(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1951,7 +1983,7 @@ func Test_Sync_Upstreams_Target_ZeroWeight_3x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -1986,7 +2018,7 @@ func Test_Sync_Upstreams_Target_ZeroWeight_Konnect(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2019,7 +2051,7 @@ func Test_Sync_RateLimitingPlugin(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2060,7 +2092,7 @@ func Test_Sync_FillDefaults_Earlier_Than_1_5_1(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	// ignore entities fields based on Kong version
@@ -2104,7 +2136,7 @@ func Test_Sync_FillDefaults_From_2_0_5_To_2_1_4(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2149,7 +2181,7 @@ func Test_Sync_FillDefaults_From_2_2_1_to_2_6_0(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2189,7 +2221,7 @@ func Test_Sync_FillDefaults_From_2_6_9(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2224,7 +2256,7 @@ func Test_Sync_SkipCACert_2x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2260,7 +2292,7 @@ func Test_Sync_SkipCACert_3x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2296,7 +2328,7 @@ func Test_Sync_RBAC_2x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2401,7 +2433,7 @@ func Test_Sync_RBAC_3x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2506,7 +2538,7 @@ func Test_Sync_Create_Route_With_Service_Name_Reference_2x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2539,7 +2571,7 @@ func Test_Sync_Create_Route_With_Service_Name_Reference_3x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2575,7 +2607,7 @@ func Test_Sync_PluginsOnEntitiesTill_3_0_0(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2612,7 +2644,7 @@ func Test_Sync_PluginsOnEntitiesFrom_3_0_0(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2649,7 +2681,7 @@ func Test_Sync_PluginOrdering(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2808,7 +2840,7 @@ func Test_Sync_Vault(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2930,7 +2962,7 @@ func Test_Sync_UpdateUsernameInConsumerWithCustomID(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -2974,7 +3006,7 @@ func Test_Sync_UpdateConsumerWithCustomID(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -3018,7 +3050,7 @@ func Test_Sync_UpdateUsernameInConsumerWithCustomID_3x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -3062,7 +3094,7 @@ func Test_Sync_UpdateConsumerWithCustomID_3x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -3105,7 +3137,7 @@ func Test_Sync_UpdateConsumerWithCustomID_3x(t *testing.T) {
 func Test_Sync_ConsumerGroupsTill30(t *testing.T) {
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 	tests := []struct {
 		name          string
@@ -3145,7 +3177,7 @@ func Test_Sync_ConsumerGroupsTill30(t *testing.T) {
 func Test_Sync_ConsumerGroups_31(t *testing.T) {
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 	tests := []struct {
 		name            string
@@ -3221,7 +3253,7 @@ func Test_Sync_ConsumerGroupsRLAFrom31(t *testing.T) {
 	)
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 	tests := []struct {
 		name          string
@@ -3330,7 +3362,7 @@ func Test_Sync_ConsumerGroupsRLAFrom31(t *testing.T) {
 func Test_Sync_ConsumerGroupsKonnect(t *testing.T) {
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 	tests := []struct {
 		name            string
@@ -3369,7 +3401,7 @@ func Test_Sync_PluginInstanceName(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -3450,7 +3482,7 @@ func Test_Sync_SkipConsumers(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -3500,7 +3532,7 @@ func Test_Sync_SkipConsumers_34x(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -3672,7 +3704,7 @@ func Test_Sync_SkipConsumers_Konnect(t *testing.T) {
 	// setup stage
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	tests := []struct {
@@ -3881,7 +3913,7 @@ func Test_Sync_ChangingIDsWhileKeepingNames(t *testing.T) {
 
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	// These are the IDs that should be present in Kong after the second sync in all cases.
@@ -3983,7 +4015,7 @@ func Test_Sync_UpdateWithExplicitIDs(t *testing.T) {
 
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	const (
@@ -4036,7 +4068,7 @@ func Test_Sync_UpdateWithExplicitIDsWithNoNames(t *testing.T) {
 
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	const (
@@ -4081,7 +4113,7 @@ func Test_Sync_CreateCertificateWithSNIs(t *testing.T) {
 
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	err = sync("testdata/sync/023-create-and-update-certificate-with-snis/initial.yaml")
@@ -4143,7 +4175,7 @@ func Test_Sync_ConsumersWithCustomIDAndOrUsername(t *testing.T) {
 
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 
 	err = sync("testdata/sync/024-consumers-with-custom_id-and-username/kong3x.yaml")
@@ -4168,6 +4200,21 @@ func Test_Sync_ConsumersWithCustomIDAndOrUsername(t *testing.T) {
 			{
 				ID:       kong.String("8ef278c9-48c1-43e1-b665-e9bc18fab4c8"),
 				Username: kong.String("username_only"),
+			},
+		},
+	}, nil)
+
+	err = sync("testdata/sync/024-consumers-with-custom_id-and-username/kong3x-reverse-order.yaml")
+	require.NoError(t, err)
+
+	testKongState(t, client, false, utils.KongRawState{
+		Consumers: []*kong.Consumer{
+			{
+				Username: kong.String("TestUser"),
+			},
+			{
+				Username: kong.String("OtherUser"),
+				CustomID: kong.String("TestUser"),
 			},
 		},
 	}, nil)
@@ -4206,7 +4253,7 @@ func Test_Sync_ConsumerGroupsScopedPlugins(t *testing.T) {
 	)
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 	tests := []struct {
 		name          string
@@ -4339,7 +4386,7 @@ func Test_Sync_ConsumerGroupsScopedPlugins_After350(t *testing.T) {
 	)
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 	tests := []struct {
 		name          string
@@ -4500,7 +4547,7 @@ func Test_Sync_ConsumerGroupsScopedPlugins_Post340(t *testing.T) {
 func Test_Sync_ConsumerGroupsScopedPluginsKonnect(t *testing.T) {
 	client, err := getTestClient()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Fatalf(err.Error())
 	}
 	tests := []struct {
 		name          string
@@ -4567,6 +4614,152 @@ func Test_Sync_ConsumerGroupsScopedPluginsKonnect(t *testing.T) {
 
 			sync(tc.kongFile)
 			testKongState(t, client, false, tc.expectedState, nil)
+		})
+	}
+}
+
+// test scope:
+//   - konnect
+func Test_Sync_KonnectRename(t *testing.T) {
+	// setup stage
+	tests := []struct {
+		name             string
+		controlPlaneName string
+		runtimeGroupName string
+		kongFile         string
+		flags            []string
+		expectedState    utils.KongRawState
+	}{
+		{
+			name:     "konnect-runtime-group-name flag - default",
+			kongFile: "testdata/sync/026-konnect-rename/default.yaml",
+			flags:    []string{"--konnect-runtime-group-name", "default"},
+			expectedState: utils.KongRawState{
+				Services: defaultCPService,
+			},
+		},
+		{
+			name:     "konnect-control-plane-name flag - default",
+			kongFile: "testdata/sync/026-konnect-rename/default.yaml",
+			flags:    []string{"--konnect-control-plane-name", "default"},
+			expectedState: utils.KongRawState{
+				Services: defaultCPService,
+			},
+		},
+		{
+			name:             "konnect-runtime-group-name flag - test",
+			runtimeGroupName: "test",
+			kongFile:         "testdata/sync/026-konnect-rename/test.yaml",
+			flags:            []string{"--konnect-runtime-group-name", "test"},
+			expectedState: utils.KongRawState{
+				Services: testCPService,
+			},
+		},
+		{
+			name:             "konnect-control-plane-name flag - test",
+			controlPlaneName: "test",
+			kongFile:         "testdata/sync/026-konnect-rename/test.yaml",
+			flags:            []string{"--konnect-control-plane-name", "test"},
+			expectedState: utils.KongRawState{
+				Services: testCPService,
+			},
+		},
+		{
+			name:     "konnect.runtime_group_name - default",
+			kongFile: "testdata/sync/026-konnect-rename/konnect_default_rg.yaml",
+			expectedState: utils.KongRawState{
+				Services: defaultCPService,
+			},
+		},
+		{
+			name:     "konnect.control_plane_name - default",
+			kongFile: "testdata/sync/026-konnect-rename/konnect_default_cp.yaml",
+			expectedState: utils.KongRawState{
+				Services: defaultCPService,
+			},
+		},
+		{
+			name:             "konnect.runtime_group_name - test",
+			runtimeGroupName: "test",
+			kongFile:         "testdata/sync/026-konnect-rename/konnect_test_rg.yaml",
+			expectedState: utils.KongRawState{
+				Services: testCPService,
+			},
+		},
+		{
+			name:             "konnect.control_plane_name - test",
+			controlPlaneName: "test",
+			kongFile:         "testdata/sync/026-konnect-rename/konnect_test_cp.yaml",
+			expectedState: utils.KongRawState{
+				Services: testCPService,
+			},
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			runWhenKonnect(t)
+			setup(t)
+			if tc.controlPlaneName != "" {
+				t.Setenv("DECK_KONNECT_CONTROL_PLANE_NAME", tc.controlPlaneName)
+				t.Cleanup(func() {
+					reset(t, "--konnect-control-plane-name", tc.controlPlaneName)
+				})
+			} else if tc.runtimeGroupName != "" {
+				t.Setenv("DECK_KONNECT_RUNTIME_GROUP_NAME", tc.runtimeGroupName)
+				t.Cleanup(func() {
+					reset(t, "--konnect-runtime-group-name", tc.runtimeGroupName)
+				})
+			}
+			client, err := getTestClient()
+			if err != nil {
+				t.Fatalf(err.Error())
+			}
+			sync(tc.kongFile, tc.flags...)
+			testKongState(t, client, true, tc.expectedState, nil)
+		})
+	}
+}
+
+func Test_Sync_KonnectRenameErrors(t *testing.T) {
+	tests := []struct {
+		name          string
+		kongFile      string
+		flags         []string
+		expectedError error
+	}{
+		{
+			name:     "different runtime group names fail",
+			kongFile: "testdata/sync/026-konnect-rename/konnect_default_cp.yaml",
+			flags:    []string{"--konnect-runtime-group-name", "rg1"},
+			expectedError: errors.New(`warning: control plane 'rg1' specified via ` +
+				`--konnect-[control-plane|runtime-group]-name flag is different from 'default' found in state file(s)`),
+		},
+		{
+			name:     "different runtime group names fail",
+			kongFile: "testdata/sync/026-konnect-rename/konnect_default_rg.yaml",
+			flags:    []string{"--konnect-runtime-group-name", "rg1"},
+			expectedError: errors.New(`warning: control plane 'rg1' specified via ` +
+				`--konnect-[control-plane|runtime-group]-name flag is different from 'default' found in state file(s)`),
+		},
+		{
+			name:     "different control plane names fail",
+			kongFile: "testdata/sync/026-konnect-rename/konnect_default_cp.yaml",
+			flags:    []string{"--konnect-control-plane-name", "cp1"},
+			expectedError: errors.New(`warning: control plane 'cp1' specified via ` +
+				`--konnect-[control-plane|runtime-group]-name flag is different from 'default' found in state file(s)`),
+		},
+		{
+			name:     "different control plane names fail",
+			kongFile: "testdata/sync/026-konnect-rename/konnect_default_rg.yaml",
+			flags:    []string{"--konnect-control-plane-name", "cp1"},
+			expectedError: errors.New(`warning: control plane 'cp1' specified via ` +
+				`--konnect-[control-plane|runtime-group]-name flag is different from 'default' found in state file(s)`),
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := sync(tc.kongFile, tc.flags...)
+			assert.Equal(t, err, tc.expectedError)
 		})
 	}
 }
